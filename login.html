@@ -132,14 +132,14 @@
         <div class="card-body">
             <form id="loginForm">
                 <div class="form-group">
-                    <label for="usuario">Usuario de Tienda</label>
-                    <input type="text" id="usuario" placeholder="Ej: tienda_429" required autocomplete="off">
-                    <span class="helper-text">Formato: tienda_ seguido del número (ej. tienda_429)</span>
+                    <label for="usuario">Usuario de Tienda o DNI</label>
+                    <input type="text" id="usuario" placeholder="Ej: tienda_429 o su DNI" required autocomplete="off">
+                    <span class="helper-text">Admin: tienda_número | Repositor: DNI</span>
                 </div>
 
                 <div class="form-group">
-                    <label for="password">Contraseña de Sucursal</label>
-                    <input type="password" id="password" placeholder="••••••••" required>
+                    <label for="password">Contraseña (Opcional para Repositor)</label>
+                    <input type="password" id="password" placeholder="••••••••">
                 </div>
 
                 <button type="submit" class="btn-submit">INGRESAR AL SISTEMA</button>
@@ -154,67 +154,104 @@
     </div>
 
     <script>
-        // Credenciales de tu proyecto limpio en Supabase
+        // Credenciales de Supabase
         const SUPABASE_URL = 'https://jtpobhgjjwrgtmzxvwsp.supabase.co';
         const SUPABASE_ANON_KEY = 'sb_publishable_7lS6ptxFvZVqXXWdcbHopw_YNXlUTOT'; 
         
         const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
-      document.getElementById('loginForm').addEventListener('submit', async (e) => {
+        document.getElementById('loginForm').addEventListener('submit', async (e) => {
             e.preventDefault();
+            // Corregido: uso de paréntesis en lugar de corchetes
             const inputUsuario = document.getElementById('usuario').value.trim().toLowerCase();
             const password = document.getElementById('password').value.trim();
             const mensaje = document.getElementById('mensaje');
 
             mensaje.style.color = '#333';
-            mensaje.textContent = 'Verificando sucursal...';
+            mensaje.textContent = 'Verificando credenciales...';
 
             try {
-                // Validamos y extraemos el número de tienda del formato "tienda_429"
-                const match = inputUsuario.match(/tienda_(\d+)/);
-                if (!match) {
-                    mensaje.style.color = '#d9534f';
-                    mensaje.textContent = 'Formato incorrecto. Use: tienda_número (ej: tienda_429)';
+                // CASO 1: Ingresó como Administrador (Formato tienda_x)
+                const matchTienda = inputUsuario.match(/tienda_(\d+)/);
+                
+                if (matchTienda) {
+                    const codigoSucursal = matchTienda[1];
+
+                    const { data, error } = await supabaseClient
+                        .from('tiendas')
+                        .select('*')
+                        .eq('codigo_sucursal', codigoSucursal)
+                        .single();
+
+                    if (error || !data) {
+                        mensaje.style.color = '#d9534f';
+                        mensaje.textContent = `La sucursal ${codigoSucursal} no está registrada.`;
+                        return;
+                    }
+
+                    if (data.password === password) {
+                        localStorage.setItem('sesion_actual', JSON.stringify({
+                            tipo: 'tienda_admin',
+                            id: data.id,
+                            codigo: data.codigo_sucursal,
+                            nombre: data.nombre_sucursal,
+                            google_refresh_token: data.google_refresh_token || null
+                        }));
+
+                        mensaje.style.color = 'green';
+                        mensaje.textContent = '¡Acceso de Admin exitoso! Redirigiendo...';
+                        
+                        setTimeout(() => {
+                            window.location.href = 'admin.html';
+                        }, 1000);
+                    } else {
+                        mensaje.style.color = '#d9534f';
+                        mensaje.textContent = 'Contraseña incorrecta.';
+                    }
                     return;
                 }
 
-                const codigoSucursal = match[1];
+                // CASO 2: Ingresó como Repositor (Buscamos por DNI en usuarios_tienda)
+                const { data: usuarioData, error: usuarioError } = await supabaseClient
+                    .from('usuarios_tienda')
+                    .select(`
+                        *,
+                        tiendas (
+                            id,
+                            codigo_sucursal,
+                            nombre_sucursal
+                        )
+                    `)
+                    .eq('dni', inputUsuario)
+                    .maybeSingle();
 
-                // Buscamos la tienda en la base de datos de Supabase comparando el código
-                const { data, error } = await supabaseClient
-                    .from('tiendas')
-                    .select('*')
-                    .eq('codigo_sucursal', codigoSucursal)
-                    .single();
-
-                if (error || !data) {
+                if (usuarioError || !usuarioData) {
                     mensaje.style.color = '#d9534f';
-                    mensaje.textContent = `La sucursal ${codigoSucursal} no está registrada.`;
+                    mensaje.textContent = 'Usuario o DNI no registrado en el sistema.';
                     return;
                 }
 
-                // Validamos la contraseña de la sucursal
-                if (data.password === password) {
-                    // Guardamos la sesión de administrador de tienda en el localStorage
-                    localStorage.setItem('sesion_actual', JSON.stringify({
-                        tipo: 'tienda_admin',
-                        id: data.id,
-                        codigo: data.codigo_sucursal,
-                        nombre: data.nombre_sucursal,
-                        google_refresh_token: data.google_refresh_token || null
-                    }));
+                // Guardamos la sesión del repositor asociada a su tienda correspondiente
+                localStorage.setItem('sesion_actual', JSON.stringify({
+                    tipo: 'repositor',
+                    dni: usuarioData.dni,
+                    nombre: `${usuarioData.nombre || ''} ${usuarioData.apellido || ''}`.trim(),
+                    id_tienda: usuarioData.tiendas ? usuarioData.tiendas.id : usuarioData.tienda_id,
+                    codigo_tienda: usuarioData.tiendas ? usuarioData.tiendas.codigo_sucursal : null,
+                    nombre_tienda: usuarioData.tiendas ? usuarioData.tiendas.nombre_sucursal : null
+                }));
 
-                    mensaje.style.color = 'green';
-                    mensaje.textContent = '¡Acceso exitoso! Redirigiendo al panel...';
-                    
-                    // Redirigir a la página de administración de la tienda
-                    setTimeout(() => {
-                        window.location.href = 'admin.html';
-                    }, 1000);
-                } else {
-                    mensaje.style.color = '#d9534f';
-                    mensaje.textContent = 'Contraseña incorrecta.';
-                }
+                localStorage.setItem('repositorDni', usuarioData.dni);
+                localStorage.setItem('rolUsuario', 'repositor');
+                localStorage.setItem('tiendaActual', usuarioData.tiendas ? `tienda_${usuarioData.tiendas.codigo_sucursal}` : usuarioData.tienda_id);
+
+                mensaje.style.color = 'green';
+                mensaje.textContent = '¡Acceso de Repositor exitoso! Redirigiendo...';
+
+                setTimeout(() => {
+                    window.location.href = 'vencimientos.html';
+                }, 1000);
+
             } catch (err) {
                 console.error(err);
                 mensaje.style.color = '#d9534f';
