@@ -1,0 +1,226 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Control Interno de Merma - Login</title>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f4f6f9;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+        }
+        .login-card {
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 6px 20px rgba(0,0,0,0.1);
+            width: 100%;
+            max-width: 420px;
+            overflow: hidden;
+        }
+        .card-header {
+            background: #0033a0;
+            color: white;
+            text-align: center;
+            padding: 25px 20px;
+        }
+        .badge {
+            background: #e60000;
+            color: white;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: bold;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            display: inline-block;
+            margin-bottom: 10px;
+        }
+        .card-header h1 {
+            margin: 0;
+            font-size: 20px;
+            font-weight: bold;
+            letter-spacing: 0.5px;
+        }
+        .card-header p {
+            margin: 5px 0 0 0;
+            font-size: 13px;
+            opacity: 0.85;
+        }
+        .card-body {
+            padding: 30px;
+        }
+        .form-group {
+            margin-bottom: 20px;
+        }
+        label {
+            display: block;
+            margin-bottom: 8px;
+            color: #333;
+            font-weight: bold;
+            font-size: 12px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        input {
+            width: 100%;
+            padding: 12px 15px;
+            border: 1px solid #ccd1d9;
+            border-radius: 6px;
+            box-sizing: border-box;
+            font-size: 15px;
+            transition: border-color 0.2s;
+        }
+        input:focus {
+            border-color: #0033a0;
+            outline: none;
+        }
+        .helper-text {
+            font-size: 11px;
+            color: #888;
+            margin-top: 5px;
+            display: block;
+        }
+        .btn-submit {
+            width: 100%;
+            padding: 14px;
+            background-color: #1a56db;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            font-size: 15px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: background-color 0.2s;
+            margin-top: 10px;
+        }
+        .btn-submit:hover {
+            background-color: #0033a0;
+        }
+        .card-footer {
+            background: #fafbfc;
+            border-top: 1px solid #eaeef2;
+            padding: 15px;
+            text-align: center;
+            font-size: 12px;
+            color: #666;
+        }
+        #mensaje {
+            text-align: center;
+            margin-top: 15px;
+            font-size: 13px;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="login-card">
+        <!-- Cabecera Institucional -->
+        <div class="card-header">
+            <span class="badge">Carrefour Express</span>
+            <h1>Control Interno de Merma</h1>
+            <p>Gestión de Vencimientos y Stock por Sucursal</p>
+        </div>
+
+        <!-- Cuerpo del Formulario -->
+        <div class="card-body">
+            <form id="loginForm">
+                <div class="form-group">
+                    <label for="usuario">Usuario de Tienda</label>
+                    <input type="text" id="usuario" placeholder="Ej: tienda_429" required autocomplete="off">
+                    <span class="helper-text">Formato: tienda_ seguido del número (ej. tienda_429)</span>
+                </div>
+
+                <div class="form-group">
+                    <label for="password">Contraseña de Sucursal</label>
+                    <input type="password" id="password" placeholder="••••••••" required>
+                </div>
+
+                <button type="submit" class="btn-submit">INGRESAR AL SISTEMA</button>
+                <div id="mensaje"></div>
+            </form>
+        </div>
+
+        <!-- Pie de tarjeta -->
+        <div class="card-footer">
+            Zona 1 — Operaciones de Control de Vtos
+        </div>
+    </div>
+
+    <script>
+        // Credenciales de tu proyecto limpio en Supabase
+        const SUPABASE_URL = 'https://jtpobhgjjwrgtmzxvwsp.supabase.co';
+        const SUPABASE_ANON_KEY = 'sb_publishable_7lS6ptxFvZVqXXWdcbHopw_YNXlUTOT'; 
+        
+        const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+      document.getElementById('loginForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const inputUsuario = document.getElementById('usuario').value.trim().toLowerCase();
+            const password = document.getElementById('password').value.trim();
+            const mensaje = document.getElementById('mensaje');
+
+            mensaje.style.color = '#333';
+            mensaje.textContent = 'Verificando sucursal...';
+
+            try {
+                // Validamos y extraemos el número de tienda del formato "tienda_429"
+                const match = inputUsuario.match(/tienda_(\d+)/);
+                if (!match) {
+                    mensaje.style.color = '#d9534f';
+                    mensaje.textContent = 'Formato incorrecto. Use: tienda_número (ej: tienda_429)';
+                    return;
+                }
+
+                const codigoSucursal = match[1];
+
+                // Buscamos la tienda en la base de datos de Supabase comparando el código
+                const { data, error } = await supabaseClient
+                    .from('tiendas')
+                    .select('*')
+                    .eq('codigo_sucursal', codigoSucursal)
+                    .single();
+
+                if (error || !data) {
+                    mensaje.style.color = '#d9534f';
+                    mensaje.textContent = `La sucursal ${codigoSucursal} no está registrada.`;
+                    return;
+                }
+
+                // Validamos la contraseña de la sucursal
+                if (data.password === password) {
+                    // Guardamos la sesión de administrador de tienda en el localStorage
+                    localStorage.setItem('sesion_actual', JSON.stringify({
+                        tipo: 'tienda_admin',
+                        id: data.id,
+                        codigo: data.codigo_sucursal,
+                        nombre: data.nombre_sucursal,
+                        google_refresh_token: data.google_refresh_token || null
+                    }));
+
+                    mensaje.style.color = 'green';
+                    mensaje.textContent = '¡Acceso exitoso! Redirigiendo al panel...';
+                    
+                    // Redirigir a la página de administración de la tienda
+                    setTimeout(() => {
+                        window.location.href = 'admin.html';
+                    }, 1000);
+                } else {
+                    mensaje.style.color = '#d9534f';
+                    mensaje.textContent = 'Contraseña incorrecta.';
+                }
+            } catch (err) {
+                console.error(err);
+                mensaje.style.color = '#d9534f';
+                mensaje.textContent = 'Error de conexión con la base de datos.';
+            }
+        });
+    </script>
+</body>
+</html>
