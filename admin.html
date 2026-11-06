@@ -7,183 +7,220 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js"></script>
+    <script src="https://unpkg.com/html5-qrcode" type="text/javascript"></script>
+    <style>
+        @media print {
+            body * {
+                visibility: hidden;
+            }
+            #areaImpresionReporte, #areaImpresionReporte * {
+                visibility: visible;
+            }
+            #areaImpresionReporte {
+                position: absolute;
+                left: 0;
+                top: 0;
+                width: 100%;
+                background: white;
+                color: black;
+                padding: 20px;
+            }
+        }
+    </style>
 </head>
-<body class="bg-slate-100 min-h-screen flex flex-col">
+<body class="bg-slate-100 min-h-screen flex flex-col md:flex-row">
 
-    <!-- Barra Superior -->
-    <header class="bg-blue-900 text-white shadow-md px-6 py-4 flex justify-between items-center">
+    <!-- SIDEBAR DE NAVEGACIÓN -->
+    <aside class="w-full md:w-64 bg-slate-900 text-white flex flex-col justify-between shadow-xl shrink-0">
         <div>
-            <span class="bg-red-600 text-xs font-bold px-2.5 py-1 rounded-full uppercase tracking-wider">Panel Admin</span>
-            <h1 id="tituloSucursal" class="text-lg font-bold mt-1">Cargando sucursal...</h1>
-        </div>
-        <button onclick="cerrarSesion()" class="bg-red-600 hover:bg-red-700 text-xs font-bold px-4 py-2 rounded-lg transition uppercase tracking-wider">
-            Cerrar Sesión
-        </button>
-    </header>
-
-    <!-- Contenido Principal -->
-    <main class="flex-1 max-w-6xl w-full mx-auto p-4 md:p-6 space-y-6">
-
-        <!-- SECCIÓN: VINCULACIÓN CON GOOGLE SHEETS (BYOS) -->
-        <div class="bg-white rounded-xl shadow-md p-6 border border-slate-200">
-            <h3 class="text-base font-bold text-slate-800 uppercase tracking-wide flex items-center mb-4">
-                <span class="bg-green-100 text-green-800 p-2 rounded-lg mr-2">📊</span> Vinculación con Google Sheets (Bring Your Own Storage)
-            </h3>
-            <p class="text-xs text-slate-600 mb-4">
-                Conectá tu cuenta de Google institucional o personal para permitir que el sistema cree y gestione automáticamente las planillas de vencimientos de esta sucursal en tu Google Drive.
-            </p>
-            <div id="estadoGoogleContainer" class="flex flex-col sm:flex-row items-center justify-between bg-slate-50 p-4 rounded-lg border border-slate-100 gap-4">
-                <div>
-                    <span class="block text-xs font-bold text-slate-500 uppercase">Estado de la Conexión:</span>
-                    <span id="textoEstadoGoogle" class="text-sm font-bold text-amber-600">Verificando...</span>
-                </div>
-                <button onclick="iniciarVinculacionGoogle()" id="btnVincularGoogle" class="w-full sm:w-auto bg-green-700 hover:bg-green-800 text-white font-bold py-2.5 px-6 rounded-lg text-xs uppercase tracking-wider transition shadow">
-                    Vincular Cuenta de Google
-                </button>
+            <!-- Logo / Cabecera Sidebar -->
+            <div class="p-5 border-b border-slate-800">
+                <span class="bg-red-600 text-[10px] font-bold px-2 py-0.5 rounded uppercase tracking-wider">Panel Admin</span>
+                <h1 id="tituloSucursalSidebar" class="text-sm font-bold mt-1 text-slate-100 truncate">Cargando...</h1>
+                <span class="text-[11px] text-emerald-400 flex items-center gap-1 mt-1">● Sistema en línea</span>
             </div>
-        </div>
 
-        <!-- SECCIÓN 1: GESTIÓN DE REPOSITORES (Desplegable) -->
-        <details class="bg-white rounded-xl shadow-md p-6 border border-slate-200 group">
-            <summary class="text-base font-bold text-slate-800 uppercase tracking-wide cursor-pointer flex items-center justify-between">
-                <span class="flex items-center">
-                    <span class="bg-blue-100 text-blue-800 p-2 rounded-lg mr-2">👥</span> Gestión de Repositores (DNI y PIN)
-                </span>
-                <span class="text-xs text-slate-400 group-open:rotate-180 transition transform">▼</span>
-            </summary>
-
-            <div class="mt-6 pt-4 border-t border-slate-100 space-y-4">
-                <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4 bg-slate-50 p-4 rounded-lg border border-slate-100">
-                    <div>
-                        <label class="block text-xs font-bold text-slate-600 uppercase mb-1">Nombre</label>
-                        <input type="text" id="nombreRepo" placeholder="Ej: Juan" 
-                            class="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm bg-white focus:ring-2 focus:ring-blue-600 focus:outline-none">
-                    </div>
-                    <div>
-                        <label class="block text-xs font-bold text-slate-600 uppercase mb-1">Apellido</label>
-                        <input type="text" id="apellidoRepo" placeholder="Ej: Pérez" 
-                            class="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm bg-white focus:ring-2 focus:ring-blue-600 focus:outline-none">
-                    </div>
-                    <div>
-                        <label class="block text-xs font-bold text-slate-600 uppercase mb-1">DNI</label>
-                        <input type="text" id="dniRepo" placeholder="Ej: 35123456" 
-                            class="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm bg-white focus:ring-2 focus:ring-blue-600 focus:outline-none">
-                    </div>
-                    <div>
-                        <label class="block text-xs font-bold text-slate-600 uppercase mb-1">PIN (4 dígitos)</label>
-                        <input type="password" id="pinRepo" maxlength="4" placeholder="••••" 
-                            class="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm bg-white focus:ring-2 focus:ring-blue-600 focus:outline-none">
-                    </div>
-                </div>
-                <button onclick="agregarRepositor()" 
-                    class="w-full bg-blue-700 hover:bg-blue-800 text-white font-bold py-2.5 px-4 rounded-lg text-sm uppercase transition shadow">
-                    Registrar Nuevo Repositor
-                </button>
-
-                <div class="overflow-x-auto mt-4">
-                    <table class="w-full text-left border-collapse text-sm">
-                        <thead>
-                            <tr class="bg-slate-100 text-slate-700 uppercase text-xs tracking-wider border-b">
-                                <th class="p-3">Nombre y Apellido</th>
-                                <th class="p-3">DNI (Usuario)</th>
-                                <th class="p-3">PIN</th>
-                                <th class="p-3">Estado</th>
-                                <th class="p-3 text-center">Acciones</th>
-                            </tr>
-                        </thead>
-                        <tbody id="tablaRepositores">
-                            <tr><td colspan="5" class="p-4 text-center text-slate-400">Cargando personal...</td></tr>
-                        </tbody>
-                    </table>
-                </div>
-            </div>
-        </details>
-
-       <!-- SECCIÓN 2: CATÁLOGO DE PRODUCTOS (Modo Alta Individual) -->
-<details class="bg-white rounded-xl shadow-md p-6 border border-slate-200 group">
-    <summary class="text-base font-bold text-slate-800 uppercase tracking-wide cursor-pointer flex items-center justify-between">
-        <span class="flex items-center">
-            <span class="bg-blue-100 text-blue-800 p-2 rounded-lg mr-2">📦</span> Catálogo de Productos y Alta Rápida
-        </span>
-        <span class="text-xs text-slate-400 group-open:rotate-180 transition transform">▼</span>
-    </summary>
-
-    <div class="mt-6 pt-4 border-t border-slate-100 space-y-6">
-        
-        <!-- Alta Individual (Para productos nuevos que no estén en el catálogo general) -->
-        <div class="bg-slate-50 p-4 rounded-lg border border-slate-100">
-            <h3 class="text-xs font-bold text-slate-700 uppercase tracking-wider mb-3">➕ Agregar Producto Individual Manualmente</h3>
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div>
-                    <label class="block font-semibold text-xs text-slate-600 uppercase mb-1">Código EAN (Barras):</label>
-                    <input type="text" id="ean" placeholder="Ej: 7791234567890" class="w-full p-2.5 border border-slate-300 rounded-lg text-sm bg-white">
-                </div>
-                <div>
-                    <label class="block font-semibold text-xs text-slate-600 uppercase mb-1">Descripción:</label>
-                    <input type="text" id="descripcion" placeholder="Ej: LECHE DESCARTABLE 1L" class="w-full p-2.5 border border-slate-300 rounded-lg text-sm bg-white">
-                </div>
-                <div>
-                    <label class="block font-semibold text-xs text-slate-600 uppercase mb-1">Sector:</label>
-                    <input type="text" id="sector" placeholder="Ej: FRESCOS" class="w-full p-2.5 border border-slate-300 rounded-lg text-sm bg-white">
-                </div>
-                <div>
-                    <label class="block font-semibold text-xs text-slate-600 uppercase mb-1">Sección:</label>
-                    <input type="text" id="seccion" placeholder="Ej: LACTEOS" class="w-full p-2.5 border border-slate-300 rounded-lg text-sm bg-white">
-                </div>
-            </div>
-            <button onclick="guardarProductoIndividual()" class="w-full bg-blue-700 hover:bg-blue-800 text-white font-bold py-2.5 px-4 rounded-lg transition uppercase text-xs tracking-wider shadow mt-4">
-                Guardar Producto en el Catálogo
-            </button>
-            <div class="text-center font-bold text-xs mt-2" id="statusMsg"></div>
-        </div>
-
-        <!-- Listado de consulta del Catálogo Vigente -->
-        <div>
-            <div class="flex flex-col sm:flex-row justify-between items-center mb-4 gap-2">
-                <h3 class="text-xs font-bold text-slate-700 uppercase tracking-wider">Listado del Catálogo Vigente</h3>
-                <input type="text" id="buscarProductoInput" onkeyup="filtrarProductos()" placeholder="Buscar por EAN o descripción..." 
-                    class="w-full sm:w-72 px-3 py-2 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-600 focus:outline-none">
-            </div>
-            <div class="overflow-x-auto max-h-[400px] overflow-y-auto border border-slate-200 rounded-lg">
-                <table class="w-full text-left border-collapse text-sm">
-                    <thead class="bg-slate-100 text-slate-700 uppercase text-xs tracking-wider sticky top-0">
-                        <tr>
-                            <th class="p-3">EAN</th>
-                            <th class="p-3">Descripción</th>
-                            <th class="p-3">Sector / Sección</th>
-                            <th class="p-3 text-center">Acciones</th>
-                        </tr>
-                    </thead>
-                    <tbody id="tablaProductos">
-                       <tr><td colspan="4" class="p-4 text-center text-slate-400">Cargando catálogo...</td></tr>
-                    </tbody>
-                </table>
-            </div>
-        </div>
-    </div>
-</details>
-
-        <!-- SECCIÓN 3: CARGA DE VENCIMIENTOS Y LISTADO CON BITÁCORA (Desplegable) -->
-        <details class="bg-white rounded-xl shadow-md p-6 border border-slate-200 group" open>
-            <summary class="text-base font-bold text-slate-800 uppercase tracking-wide cursor-pointer flex items-center justify-between">
-                <span class="flex items-center">
-                    <span class="bg-blue-100 text-blue-800 p-2 rounded-lg mr-2">⏱️</span> Registro de Vencimientos y Bitácora Admin
-                </span>
-                <span class="text-xs text-slate-400 group-open:rotate-180 transition transform">▼</span>
-            </summary>
-
-            <div class="mt-6 pt-4 border-t border-slate-100 space-y-6">
+            <!-- Menú de Opciones (Limpio y sin duplicados) -->
+            <nav class="p-4 space-y-1.5">
+                <p class="text-[10px] font-bold text-slate-400 uppercase tracking-wider px-3 mb-2">Módulos Principales</p>
                 
-                <!-- Formulario de Carga Oficial -->
-                <div class="bg-slate-50 p-4 rounded-lg border border-slate-100 space-y-4">
-                    <h3 class="text-xs font-bold text-slate-700 uppercase tracking-wider">Cargar Nuevo Lote de Vencimiento</h3>
+                <button onclick="cambiarSeccionAdmin('repositores', this)" class="menu-btn w-full flex items-center justify-between px-3.5 py-2.5 rounded-xl text-xs font-bold transition bg-blue-700 text-white shadow-md">
+                    <span class="flex items-center gap-2.5">👥 Gestión Repositores</span>
+                </button>
+
+                <button onclick="cambiarSeccionAdmin('catalogo', this)" class="menu-btn w-full flex items-center justify-between px-3.5 py-2.5 rounded-xl text-xs font-bold transition text-slate-300 hover:bg-slate-800 hover:text-white">
+                    <span class="flex items-center gap-2.5">📦 Catálogo & Alta EAN</span>
+                </button>
+
+                <button onclick="cambiarSeccionAdmin('vencimientos', this)" class="menu-btn w-full flex items-center justify-between px-3.5 py-2.5 rounded-xl text-xs font-bold transition text-slate-300 hover:bg-slate-800 hover:text-white">
+                    <span class="flex items-center gap-2.5">⏱️ Vencimientos</span>
+                    <span id="badgeVtosCount" class="bg-red-600 text-white text-[10px] px-1.5 py-0.5 rounded-full">0</span>
+                </button>
+
+                <button onclick="cambiarSeccionAdmin('planilla', this)" class="menu-btn w-full flex items-center justify-between px-3.5 py-2.5 rounded-xl text-xs font-bold transition text-slate-300 hover:bg-slate-800 hover:text-white">
+                    <span class="flex items-center gap-2.5">📋 Asignar Planilla de Control VTO</span>
+                </button>
+
+                <button onclick="cambiarSeccionAdmin('monitoreoPlanillas', this)" class="menu-btn w-full flex items-center justify-between px-3.5 py-2.5 rounded-xl text-xs font-bold transition text-slate-300 hover:bg-slate-800 hover:text-white">
+                    <span class="flex items-center gap-2.5">👁️ Estado de Planillas</span>
+                </button>
+            </nav>
+        </div>
+
+        <!-- Botón Cerrar Sesión en Sidebar -->
+        <div class="p-4 border-t border-slate-800">
+            <button onclick="cerrarSesion()" class="w-full bg-red-600 hover:bg-red-700 text-white text-xs font-bold py-2.5 px-4 rounded-xl transition uppercase tracking-wider flex items-center justify-center gap-2 shadow">
+                🚪 Cerrar Sesión
+            </button>
+        </div>
+    </aside>
+
+    <!-- CONTENEDOR PRINCIPAL -->
+    <div class="flex-1 flex flex-col min-w-0">
+        <!-- Barra Superior sutil -->
+        <header class="bg-white border-b border-slate-200 px-6 py-3.5 flex justify-between items-center shadow-sm">
+            <div id="nombreSeccionActual" class="text-sm font-bold text-slate-800 uppercase tracking-wider">
+                Gestión de Repositores
+            </div>
+            <div class="flex items-center gap-3">
+                <span id="lblAlertaSuperior" class="text-xs bg-amber-50 text-amber-800 border border-amber-200 px-3 py-1 rounded-lg font-medium hidden">
+                    ⚠️ Alertas pendientes
+                </span>
+            </div>
+        </header>
+
+        <main class="flex-1 p-4 md:p-6 space-y-6 max-w-6xl w-full mx-auto">
+
+            <!-- SECCIÓN 1: GESTIÓN DE REPOSITORES -->
+            <div id="seccionRepositores" class="seccion-admin space-y-6">
+                <div class="bg-white rounded-xl shadow-md p-6 border border-slate-200 space-y-4">
+                    <div class="flex justify-between items-center border-b pb-3">
+                        <h2 class="text-sm font-bold text-slate-800 uppercase tracking-wide flex items-center gap-2">
+                            <span class="bg-blue-100 text-blue-800 p-1.5 rounded-lg">👥</span> Registro y Control de Repositores
+                        </h2>
+                    </div>
+
+                    <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4 bg-slate-50 p-4 rounded-lg border border-slate-100">
+                        <div>
+                            <label class="block text-xs font-bold text-slate-600 uppercase mb-1">Nombre</label>
+                            <input type="text" id="nombreRepo" placeholder="Ej: Juan" 
+                                class="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm bg-white focus:ring-2 focus:ring-blue-600 focus:outline-none">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-bold text-slate-600 uppercase mb-1">Apellido</label>
+                            <input type="text" id="apellidoRepo" placeholder="Ej: Pérez" 
+                                class="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm bg-white focus:ring-2 focus:ring-blue-600 focus:outline-none">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-bold text-slate-600 uppercase mb-1">DNI</label>
+                            <input type="text" id="dniRepo" placeholder="Ej: 35123456" 
+                                class="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm bg-white focus:ring-2 focus:ring-blue-600 focus:outline-none">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-bold text-slate-600 uppercase mb-1">PIN (4 dígitos num)</label>
+                            <input type="password" id="pinRepo" maxlength="4" placeholder="••••" 
+                                class="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm bg-white focus:ring-2 focus:ring-blue-600 focus:outline-none">
+                        </div>
+                    </div>
+                    <button onclick="agregarRepositor()" 
+                        class="w-full bg-blue-700 hover:bg-blue-800 text-white font-bold py-2.5 px-4 rounded-lg text-sm uppercase transition shadow">
+                        Registrar Nuevo Repositor
+                    </button>
+
+                    <div class="overflow-x-auto mt-4">
+                        <table class="w-full text-left border-collapse text-sm">
+                            <thead>
+                                <tr class="bg-slate-100 text-slate-700 uppercase text-xs tracking-wider border-b">
+                                    <th class="p-3">Nombre y Apellido</th>
+                                    <th class="p-3">DNI (Usuario)</th>
+                                    <th class="p-3">PIN</th>
+                                    <th class="p-3">Estado</th>
+                                    <th class="p-3 text-center">Acciones</th>
+                                </tr>
+                            </thead>
+                            <tbody id="tablaRepositores">
+                                <tr><td colspan="5" class="p-4 text-center text-slate-400">Cargando personal...</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- SECCIÓN 2: CATÁLOGO DE PRODUCTOS -->
+            <div id="seccionCatalogo" class="seccion-admin space-y-6 hidden">
+                <div class="bg-white rounded-xl shadow-md p-6 border border-slate-200 space-y-6">
+                    <div class="flex justify-between items-center border-b pb-3">
+                        <h2 class="text-sm font-bold text-slate-800 uppercase tracking-wide flex items-center gap-2">
+                            <span class="bg-blue-100 text-blue-800 p-1.5 rounded-lg">📦</span> Catálogo de Productos y Alta Rápida
+                        </h2>
+                    </div>
+
+                    <!-- Alta Individual Manual -->
+                    <div class="bg-slate-50 p-4 rounded-lg border border-slate-100">
+                        <h3 class="text-xs font-bold text-slate-700 uppercase tracking-wider mb-3">➕ Agregar Producto Manualmente</h3>
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div>
+                                <label class="block font-semibold text-xs text-slate-600 uppercase mb-1">Código EAN (Barras):</label>
+                                <input type="text" id="ean" placeholder="Ej: 7791234567890" class="w-full p-2.5 border border-slate-300 rounded-lg text-sm bg-white">
+                            </div>
+                            <div>
+                                <label class="block font-semibold text-xs text-slate-600 uppercase mb-1">Descripción:</label>
+                                <input type="text" id="descripcion" placeholder="Ej: LECHE DESCARTABLE 1L" class="w-full p-2.5 border border-slate-300 rounded-lg text-sm bg-white">
+                            </div>
+                            <div>
+                                <label class="block font-semibold text-xs text-slate-600 uppercase mb-1">Sector:</label>
+                                <input type="text" id="sector" placeholder="Ej: 2 - Productos Frescos" class="w-full p-2.5 border border-slate-300 rounded-lg text-sm bg-white">
+                            </div>
+                            <div>
+                                <label class="block font-semibold text-xs text-slate-600 uppercase mb-1">Sección:</label>
+                                <input type="text" id="seccion" placeholder="Ej: 15 - P.A.S" class="w-full p-2.5 border border-slate-300 rounded-lg text-sm bg-white">
+                            </div>
+                        </div>
+                        <button onclick="guardarProductoIndividual()" class="w-full bg-blue-700 hover:bg-blue-800 text-white font-bold py-2.5 px-4 rounded-lg transition uppercase text-xs tracking-wider shadow mt-4">
+                            Guardar Producto en el Catálogo
+                        </button>
+                        <div class="text-center font-bold text-xs mt-2" id="statusMsg"></div>
+                    </div>
+
+                    <!-- Listado del Catálogo Vigente -->
+                    <div>
+                        <div class="flex flex-col sm:flex-row justify-between items-center mb-4 gap-2">
+                            <h3 class="text-xs font-bold text-slate-700 uppercase tracking-wider">Listado del Catálogo Vigente</h3>
+                            <input type="text" id="buscarProductoInput" onkeyup="filtrarProductos()" placeholder="Buscar por EAN o descripción..." 
+                                class="w-full sm:w-72 px-3 py-2 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-600 focus:outline-none">
+                        </div>
+                        <div class="overflow-x-auto max-h-[400px] overflow-y-auto border border-slate-200 rounded-lg">
+                            <table class="w-full text-left border-collapse text-sm">
+                                <thead class="bg-slate-100 text-slate-700 uppercase text-xs tracking-wider sticky top-0">
+                                    <tr>
+                                        <th class="p-3">EAN</th>
+                                        <th class="p-3">Descripción</th>
+                                        <th class="p-3">Sector / Sección</th>
+                                        <th class="p-3 text-center">Acciones</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="tablaProductos">
+                                   <tr><td colspan="4" class="p-4 text-center text-slate-400">Cargando catálogo...</td></tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- SECCIÓN 3: VENCIMIENTOS Y BITÁCORA -->
+            <div id="seccionVencimientos" class="seccion-admin space-y-6 hidden">
+                <div class="bg-white rounded-xl shadow-md p-6 border border-slate-200 space-y-4">
+                    <h2 class="text-sm font-bold text-slate-800 uppercase tracking-wide flex items-center gap-2 border-b pb-3">
+                        <span class="bg-blue-100 text-blue-800 p-1.5 rounded-lg">⏱️</span> Cargar Producto Próximo a Vencer
+                    </h2>
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                         <div>
                             <label class="block text-xs font-bold text-slate-600 uppercase mb-1">Código EAN</label>
                             <div class="flex gap-2">
                                 <input type="text" id="vtoEanAdmin" placeholder="Ej: 7791720036990" onblur="buscarDescripcionEan()" onkeydown="if(event.key==='Enter') buscarDescripcionEan()"
                                     class="flex-1 px-3 py-2.5 border border-slate-300 rounded-lg text-sm bg-white focus:ring-2 focus:ring-blue-600 focus:outline-none font-mono">
-                                <button type="button" onclick="alert('Función de cámara / escáner activo')" class="bg-slate-200 hover:bg-slate-300 px-3.5 rounded-lg text-slate-700 font-bold flex items-center justify-center" title="Escanear con cámara">
+                                <button type="button" onclick="abrirCamaraScannerAdmin()" class="bg-slate-200 hover:bg-slate-300 px-3.5 rounded-lg text-slate-700 font-bold flex items-center justify-center" title="Escanear con cámara">
                                     📷
                                 </button>
                             </div>
@@ -216,38 +253,59 @@
                             </select>
                         </div>
                     </div>
- <!-- FOTOGRAFÍA DEL LOTE (Panel Admin - Con botones Archivo y Cámara) -->
-        <div>
-            <label class="block text-xs font-bold text-slate-600 uppercase mb-1">Fotografía del Lote (Opcional)</label>
-            
-            <!-- Input file oculto -->
-            <input type="file" id="fotoLoteAdmin" accept="image/*" style="display: none;" onchange="actualizarNombreArchivoAdmin(this)">
-            
-            <!-- Botones personalizados estilo Admin -->
-            <div class="flex gap-3 mb-1">
-                <button type="button" onclick="document.getElementById('fotoLoteAdmin').click();" 
-                    class="flex-1 bg-blue-700 hover:bg-blue-800 text-white font-bold py-2.5 px-4 rounded-lg text-xs uppercase tracking-wider transition shadow flex items-center justify-center gap-2">
-                    📁 Archivo
-                </button>
-                <button type="button" onclick="abrirCamaraAdminDirecta()" 
-                    class="flex-1 bg-purple-700 hover:bg-purple-800 text-white font-bold py-2.5 px-4 rounded-lg text-xs uppercase tracking-wider transition shadow flex items-center justify-center gap-2">
-                    📷 Cámara
-                </button>
-            </div>
-            <span id="textoArchivoAdmin" class="text-[11px] text-slate-500 block text-center mt-1">Ningún archivo seleccionado</span>
-        </div>
 
-                    
+                    <div>
+                        <label class="block text-xs font-bold text-slate-600 uppercase mb-1">Foto del producto con fecha de vto(Opcional)</label>
+                        <input type="file" id="fotoLoteAdmin" accept="image/*" style="display: none;" onchange="actualizarNombreArchivoAdmin(this)">
+                        <div class="flex gap-3 mb-1">
+                            <button type="button" onclick="document.getElementById('fotoLoteAdmin').click();" 
+                                class="flex-1 bg-blue-700 hover:bg-blue-800 text-white font-bold py-2.5 px-4 rounded-lg text-xs uppercase tracking-wider transition shadow flex items-center justify-center gap-2">
+                                📁 Archivo
+                            </button>
+                            <button type="button" onclick="abrirCamaraAdminDirecta()" 
+                                class="flex-1 bg-purple-700 hover:bg-purple-800 text-white font-bold py-2.5 px-4 rounded-lg text-xs uppercase tracking-wider transition shadow flex items-center justify-center gap-2">
+                                📷 Cámara
+                            </button>
+                        </div>
+                        <span id="textoArchivoAdmin" class="text-[11px] text-slate-500 block text-center mt-1">Ningún archivo seleccionado</span>
+                    </div>
+
                     <button onclick="guardarLoteAdminOficial()" class="w-full bg-blue-700 hover:bg-blue-800 text-white font-bold py-3 px-4 rounded-lg text-sm uppercase transition shadow tracking-wider">
-                        Guardar Lote de Vencimiento
+                        Guardar Vencimiento
                     </button>
                     <div class="text-center font-bold text-xs mt-2" id="vtoStatusMsgAdmin"></div>
                 </div>
 
-                <!-- Tabla de Listado de Lotes Registrados en la Sucursal -->
-                <div>
-                    <h3 class="text-xs font-bold text-slate-700 uppercase tracking-wider mb-3">Listado de Lotes Registrados (Hacer clic en Notes para Bitácora)</h3>
-                    <div class="overflow-x-auto max-h-[400px] overflow-y-auto border border-slate-200 rounded-lg">
+                <div class="bg-white rounded-xl shadow-md p-6 border border-slate-200 space-y-4">
+                    <div class="flex flex-col sm:flex-row justify-between items-center gap-2">
+                        <h3 class="text-xs font-bold text-slate-700 uppercase tracking-wider">Filtrar por Sector / Sección</h3>
+                        <div class="flex gap-2">
+                            <button onclick="limpiarFiltrosChips()" class="text-xs bg-slate-200 hover:bg-slate-300 text-slate-700 font-bold px-3 py-1.5 rounded-lg transition">
+                                Limpiar Filtros
+                            </button>
+                            <button onclick="imprimirReporteVencimientos()" class="bg-slate-900 hover:bg-slate-800 text-white font-bold px-3.5 py-1.5 rounded-lg text-xs uppercase tracking-wider transition shadow flex items-center gap-1.5">
+                                🖨️ Imprimir Reporte
+                            </button>
+                            <button onclick="descargarExcelVencimientos()" class="bg-emerald-700 hover:bg-emerald-800 text-white font-bold px-3.5 py-1.5 rounded-lg text-xs uppercase tracking-wider transition shadow flex items-center gap-1.5">
+                                📊 Descargar Excel
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <div class="space-y-1.5 pt-2 border-t border-slate-100">
+                        <span class="text-[11px] font-bold text-slate-400 uppercase tracking-wider block">Sector:</span>
+                        <div id="chipsSectorContainer" class="flex flex-wrap gap-2"></div>
+                    </div>
+
+                    <div class="space-y-1.5 pt-2 border-t border-slate-100">
+                        <span class="text-[11px] font-bold text-slate-400 uppercase tracking-wider block">Sección:</span>
+                        <div id="chipsSeccionContainer" class="flex flex-wrap gap-2"></div>
+                    </div>
+                </div>
+
+                <div class="bg-white rounded-xl shadow-md p-6 border border-slate-200 space-y-4">
+                    <h3 class="text-xs font-bold text-slate-700 uppercase tracking-wider">Listado de Productos Registrados (Hacer clic en Notes para ver Observaciones)</h3>
+                    <div class="overflow-x-auto max-h-[450px] overflow-y-auto border border-slate-200 rounded-lg">
                         <table class="w-full text-left border-collapse text-sm">
                             <thead class="bg-slate-100 text-slate-700 uppercase text-xs tracking-wider sticky top-0">
                                 <tr>
@@ -256,36 +314,131 @@
                                     <th class="p-3">Cant.</th>
                                     <th class="p-3">Cargado Por</th>
                                     <th class="p-3">Acción</th>
-                                    <th class="p-3 text-center">Bitácora</th>
+                                    <th class="p-3 text-center">Observaciones</th>
+                                    <th class="p-3 text-center">Acciones</th>
                                 </tr>
                             </thead>
                             <tbody id="tablaLotesAdmin">
-                                <tr><td colspan="6" class="p-4 text-center text-slate-400">Cargando lotes...</td></tr>
+                                <tr><td colspan="7" class="p-4 text-center text-slate-400">Cargando vencimientos...</td></tr>
                             </tbody>
                         </table>
                     </div>
                 </div>
             </div>
-        </details>
 
-    </main>
+            <!-- SECCIÓN 4: ASIGNAR PLANILLA EXCEL -->
+            <div id="seccionPlanilla" class="seccion-admin space-y-6 hidden">
+                <div class="bg-white rounded-xl shadow-md p-6 border border-slate-200 space-y-6">
+                    <div class="flex justify-between items-center border-b pb-3">
+                        <h2 class="text-sm font-bold text-slate-800 uppercase tracking-wide flex items-center gap-2">
+                            <span class="bg-blue-100 text-blue-800 p-1.5 rounded-lg">📋</span> Cargar y Asignar Reporte de Vencimientos
+                        </h2>
+                    </div>
 
+                    <div class="bg-slate-50 p-5 rounded-lg border border-slate-100 space-y-4">
+                        <p class="text-xs text-slate-600">
+                            Seleccioná el archivo Excel o CSV (con formato de columnas <b>SEC, EAN, DESCRIPCION, STOCK, CANTIDAD, VENCIMIENTO</b>) y elegí a qué repositor querés asignárselo.
+                        </p>
+
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div>
+                                <label class="block text-xs font-bold text-slate-600 uppercase mb-1">Archivo de Planilla (CSV / Excel)</label>
+                                <input type="file" id="archivoExcelVencimientos" accept=".csv, .xlsx, .xls" 
+                                    class="w-full text-xs text-slate-500 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-xs file:font-bold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100 bg-white border border-slate-300 rounded-lg p-2">
+                            </div>
+
+                            <div>
+                                <label class="block text-xs font-bold text-slate-600 uppercase mb-1">Seleccionar Repositor Asignado</label>
+                                <select id="selectRepositorAsignar" class="w-full px-3 py-2.5 border border-slate-300 rounded-lg text-sm bg-white focus:ring-2 focus:ring-blue-600 focus:outline-none">
+                                    <option value="">-- Seleccionar Repositor --</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <button onclick="procesarYAsignarPlanillaExcel()" class="w-full bg-blue-700 hover:bg-blue-800 text-white font-bold py-3 px-4 rounded-lg text-sm uppercase transition shadow tracking-wider">
+                            Procesar Archivo y Asignar Planilla
+                        </button>
+                        <div class="text-center font-bold text-xs mt-2" id="msgEstadoPlanilla"></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- SECCIÓN 5: MONITOREO EN TIEMPO REAL DE PLANILLAS -->
+            <div id="seccionMonitoreoPlanillas" class="seccion-admin space-y-6 hidden">
+                <div class="bg-white rounded-xl shadow-md p-6 border border-slate-200 space-y-6">
+                    <div class="flex flex-col sm:flex-row justify-between items-center border-b pb-3 gap-3">
+                        <h2 class="text-sm font-bold text-slate-800 uppercase tracking-wide flex items-center gap-2">
+                            <span class="bg-blue-100 text-blue-800 p-1.5 rounded-lg">👁️</span> Seguimiento de Planillas Asignadas
+                        </h2>
+                        <button onclick="cargarMonitoreoPlanillas()" class="bg-slate-900 hover:bg-slate-800 text-white font-bold px-3 py-1.5 rounded-lg text-xs uppercase tracking-wider transition shadow flex items-center gap-1">
+                            🔄 Actualizar Datos
+                        </button>
+                    </div>
+
+                    <div class="overflow-x-auto max-h-[500px] overflow-y-auto border border-slate-200 rounded-lg">
+                        <table class="w-full text-left border-collapse text-sm">
+                            <thead class="bg-slate-100 text-slate-700 uppercase text-xs tracking-wider sticky top-0">
+                                <tr>
+                                    <th class="p-3">Repositor</th>
+                                    <th class="p-3">Producto / EAN</th>
+                                    <th class="p-3 text-center">Vto / Stock Sist.</th>
+                                    <th class="p-3 text-center">Estado</th>
+                                    <th class="p-3">Cant. Real & Observación del Repositor</th>
+                                </tr>
+                            </thead>
+                            <tbody id="tablaMonitoreoPlanillas">
+                                <tr><td colspan="5" class="p-4 text-center text-slate-400">Cargando seguimiento...</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+        </main>
+    </div>
+
+    <!-- ÁREA OCULTA PARA IMPRESIÓN DE REPORTE -->
+    <div id="areaImpresionReporte" class="hidden">
+        <div style="font-family: monospace; font-size: 12px; color: black; width: 100%;">
+            <div style="display: flex; justify-content: space-between; border-bottom: 2px solid black; padding-bottom: 8px; margin-bottom: 12px;">
+                <div>
+                    <strong>SUCURSAL: <span id="lblSucursalImpresion"></span></strong><br>
+                    <span>REPORTE DE VENCIMIENTOS Y CONTROL</span>
+                </div>
+                <div style="text-align: right;">
+                    <span>FECHA: <script>document.write(new Date().toLocaleDateString('es-AR'));</script></span><br>
+                    <span>FILTROS: <span id="lblFiltrosImpresion">TODOS</span></span>
+                </div>
+            </div>
+
+            <table style="width: 100%; border-collapse: collapse; text-align: left;">
+                <thead>
+                    <tr style="border-bottom: 1px solid black;">
+                        <th style="padding: 4px; width: 8%;">SEC</th>
+                        <th style="padding: 4px; width: 22%;">EAN</th>
+                        <th style="padding: 4px; width: 45%;">DESCRIPCION</th>
+                        <th style="padding: 4px; width: 10%; text-align: right;">CANTIDAD</th>
+                        <th style="padding: 4px; width: 15%; text-align: right;">VENCIMIENTO</th>
+                    </tr>
+                </thead>
+                <tbody id="cuerpoTablaImpresion"></tbody>
+            </table>
+        </div>
+    </div>
    
-    
-           <!-- MODAL DE BITÁCORA, OBSERVACIONES Y FOTO -->
+    <!-- MODAL DE BITÁCORA -->
     <div id="modalBitacora" class="hidden fixed inset-0 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4 z-50">
         <div class="bg-white rounded-xl shadow-2xl max-w-lg w-full p-6 space-y-4 max-h-[90vh] overflow-y-auto">
             <div class="flex justify-between items-center border-b pb-3">
                 <div>
-                    <h3 class="font-bold text-slate-800 text-base uppercase">Bitácora y Detalle del Lote</h3>
+                    <h3 class="font-bold text-slate-800 text-base uppercase">Observaciones y Detalle del Lote</h3>
                     <p id="modalEanProducto" class="text-xs font-mono text-slate-500"></p>
                 </div>
                 <button onclick="cerrarModalBitacora()" class="text-slate-400 hover:text-slate-600 font-bold text-lg">✕</button>
             </div>
 
-            <!-- SECCIÓN DE FOTO ADJUNTA -->
             <div id="seccionFotoModal" class="hidden bg-slate-50 p-3 rounded-lg border border-slate-200 text-center space-y-2">
-                <label class="block text-xs font-bold text-slate-600 uppercase">Fotografía del Lote Registrada</label>
+                <label class="block text-xs font-bold text-slate-600 uppercase">Fotografía del Vencimiento Registrado</label>
                 <div class="flex justify-center">
                     <img id="imgLoteModal" src="" alt="Foto del lote" class="max-h-40 rounded-lg border shadow-sm object-contain">
                 </div>
@@ -296,15 +449,11 @@
                 </div>
             </div>
 
-            <!-- Historial de Anotaciones -->
             <div class="space-y-2">
                 <label class="block text-xs font-bold text-slate-600 uppercase">Historial de Gestiones y Notas</label>
-                <div id="historialNotasContainer" class="max-h-36 overflow-y-auto bg-slate-50 p-3 rounded-lg border border-slate-200 space-y-2 text-xs">
-                    <!-- Se llena dinámicamente -->
-                </div>
+                <div id="historialNotasContainer" class="max-h-36 overflow-y-auto bg-slate-50 p-3 rounded-lg border border-slate-200 space-y-2 text-xs"></div>
             </div>
 
-            <!-- Input para nueva observación -->
             <div class="space-y-2">
                 <label class="block text-xs font-bold text-slate-600 uppercase">Añadir Nueva Observación</label>
                 <textarea id="nuevaAnotacionInput" rows="2" placeholder="Ej: Se pidió rebaja de precio / Se envió mail a responsable..." 
@@ -320,7 +469,12 @@
                 </button>
             </div>
         </div>
-    
+    </div>
+
+    <!-- MODAL ESCÁNER CÁMARA -->
+    <div id="scannerModalAdmin" style="display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.85); z-index: 100; flex-direction: column; align-items: center; justify-content: center; padding: 20px;">
+        <div id="readerAdmin" style="width: 100%; max-width: 360px; background: #fff; border-radius: 8px; overflow: hidden;"></div>
+        <button onclick="cerrarCamaraScannerAdmin()" style="margin-top: 15px; background: #1f2937; color: #f3f4f6; border: 1px solid #374151; padding: 10px 20px; border-radius: 8px; font-weight: bold; cursor: pointer;">Cerrar Cámara</button>
     </div>
 
     <script>
@@ -328,7 +482,6 @@
         const SUPABASE_ANON_KEY = 'sb_publishable_7lS6ptxFvZVqXXWdcbHopw_YNXlUTOT'; 
         const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
-        // Leemos la sesión unificada del login
         const sesion = JSON.parse(localStorage.getItem('sesion_actual') || '{}');
 
         const tiendaId = sesion.id;
@@ -339,66 +492,128 @@
         let productoDetectadoId = null;
         let loteSeleccionadoId = null;
         let bitacoraActual = [];
+        let html5QrCodeAdmin = null;
+
+        const SECTORES_FIJOS = ["1 - P.G.C", "2 - Productos Frescos"];
+        const SECCIONES_FIJAS = [
+            "10 - BEBIDAS", "11 - D.P.H", "14 - SECO", "15 - P.A.S",
+            "20 - FIAMBRERIA", "21 - PESCADERIA", "22 - FRUTAS Y VERDURAS",
+            "23 - PANADERIA", "24 - CARNICERIA", "26 - PLATOS PREPARADOS"
+        ];
+
+        let sectoresSeleccionados = new Set();
+        let seccionesSeleccionadas = new Set();
+        let todosLosLotesAdmin = [];
 
         if (!tiendaId) {
             window.location.href = 'login.html';
         } else {
-            document.getElementById('tituloSucursal').textContent = `Sucursal ${codigoSucursal} - ${nombreSucursal || ''}`;
+            const tituloText = `Sucursal ${codigoSucursal} - ${nombreSucursal || ''}`;
+            document.getElementById('tituloSucursalSidebar').textContent = tituloText;
             cargarRepositores();
             cargarProductos();
             cargarLotesAdmin();
         }
 
+        // --- NAVEGACIÓN POR SIDEBAR ---
+        function cambiarSeccionAdmin(seccionId, btnElement) {
+            document.querySelectorAll('.seccion-admin').forEach(el => el.classList.add('hidden'));
+            document.querySelectorAll('.menu-btn').forEach(el => {
+                el.classList.remove('bg-blue-700', 'text-white', 'shadow-md');
+                el.classList.add('text-slate-300', 'hover:bg-slate-800', 'hover:text-white');
+            });
 
-        // Verificar estado de Google al cargar la página
-        async function verificarEstadoGoogle() {
+            if (seccionId === 'repositores') {
+                document.getElementById('seccionRepositores').classList.remove('hidden');
+                document.getElementById('nombreSeccionActual').textContent = 'Gestión de Repositores';
+            } else if (seccionId === 'catalogo') {
+                document.getElementById('seccionCatalogo').classList.remove('hidden');
+                document.getElementById('nombreSeccionActual').textContent = 'Catálogo de Productos';
+            } else if (seccionId === 'vencimientos') {
+                document.getElementById('seccionVencimientos').classList.remove('hidden');
+                document.getElementById('nombreSeccionActual').textContent = 'Registro de Vencimientos y Bitácora';
+            } else if (seccionId === 'planilla') {
+                document.getElementById('seccionPlanilla').classList.remove('hidden');
+                document.getElementById('nombreSeccionActual').textContent = 'Asignación de Planilla Excel';
+                cargarSelectRepositoresParaPlanilla();
+            } else if (seccionId === 'monitoreoPlanillas') {
+                document.getElementById('seccionMonitoreoPlanillas').classList.remove('hidden');
+                document.getElementById('nombreSeccionActual').textContent = 'Monitoreo de Planillas en Tiempo Real';
+                cargarMonitoreoPlanillas();
+            }
+
+            btnElement.classList.remove('text-slate-300', 'hover:bg-slate-800', 'hover:text-white');
+            btnElement.classList.add('bg-blue-700', 'text-white', 'shadow-md');
+        }
+
+        // --- CARGAR SELECT DE REPOSITORES PARA LA PLANILLA ---
+        async function cargarSelectRepositoresParaPlanilla() {
             const { data, error } = await supabaseClient
-                .from('tiendas')
-                .select('google_refresh_token')
-                .eq('id', tiendaId)
-                .single();
+                .from('usuarios_tienda')
+                .select('*')
+                .eq('tienda_id', tiendaId)
+                .eq('activo', true);
 
-            const textoEstado = document.getElementById('textoEstadoGoogle');
-            const botonVincular = document.getElementById('btnVincularGoogle');
-
-            if (data && data.google_refresh_token) {
-                textoEstado.textContent = '✅ Cuenta vinculada y activa';
-                textoEstado.className = 'text-sm font-bold text-green-600';
-                botonVincular.textContent = 'Re-vincular / Cambiar Cuenta';
-            } else {
-                textoEstado.textContent = '⚠️ Sin vincular (Almacenamiento local temporal)';
-                textoEstado.className = 'text-sm font-bold text-amber-600';
-                botonVincular.textContent = 'Vincular Cuenta de Google';
+            const select = document.getElementById('selectRepositorAsignar');
+            if (error || !data || data.length === 0) {
+                select.innerHTML = `<option value="">No hay repositores activos</option>`;
+                return;
             }
+
+            select.innerHTML = `<option value="">-- Seleccionar Repositor --</option>` + data.map(repo => `
+                <option value="${repo.id}">${repo.nombre} ${repo.apellido} (${repo.dni})</option>
+            `).join('');
         }
 
-        // Llamar a la verificación al iniciar
-        // (Asegurate de incluir esta llamada dentro del bloque principal 'if (tiendaId) { ... }')
-        // verificarEstadoGoogle();
+        async function cargarMonitoreoPlanillas() {
+            const tbody = document.getElementById('tablaMonitoreoPlanillas');
+            tbody.innerHTML = `<tr><td colspan="5" class="p-4 text-center text-slate-400">Actualizando datos en vivo...</td></tr>`;
 
-        function iniciarVinculacionGoogle() {
-            // Parámetros de OAuth 2.0 para Google
-            const CLIENT_ID = '909865055952-26u0mu3u1m914tvgaqdj50g72k59apht.apps.googleusercontent.com'; // Reemplazar con tu Client ID de Google Cloud
-            const REDIRECT_URI = window.location.origin + window.location.pathname; // Vuelve al admin.html actual
-            const SCOPE = 'https://www.googleapis.com/auth/spreadsheets https://www.googleapis.com/auth/drive.file';
+            const { data, error } = await supabaseClient
+                .from('planillas_vencimientos')
+                .select('*')
+                .eq('tienda_id', tiendaId)
+                .order('estado', { ascending: true })
+                .order('fecha_vencimiento', { ascending: true });
 
-            const authUrl = `https://accounts.google.com/o/oauth2/v2/auth?client_id=${CLIENT_ID}&redirect_uri=${encodeURIComponent(REDIRECT_URI)}&response_type=code&scope=${encodeURIComponent(SCOPE)}&access_type=offline&prompt=consent`;
+            if (error || !data || data.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="5" class="p-4 text-center text-slate-400">No hay planillas asignadas o registros para monitorear.</td></tr>`;
+                return;
+            }
 
-            // Redirigir al usuario al flujo de consentimiento de Google
-            window.location.href = authUrl;
+            tbody.innerHTML = data.map(item => {
+                const esRevisado = item.estado === 'REVISADO';
+                const fechaVto = item.fecha_vencimiento ? item.fecha_vencimiento.split('-').reverse().join('/') : '-';
+
+                return `
+                    <tr class="border-b hover:bg-slate-50">
+                        <td class="p-3 font-bold text-slate-800 text-xs">${item.nombre_repositor || 'Repositor'}</td>
+                        <td class="p-3">
+                            <div class="font-bold text-slate-900 text-xs">${item.descripcion}</div>
+                            <div class="font-mono text-[11px] text-slate-400">EAN: ${item.codigo_ean} | Sec: ${item.sector || '-'}</div>
+                        </td>
+                        <td class="p-3 text-center font-mono text-xs">
+                            <span class="text-red-600 font-bold block">Vto: ${fechaVto}</span>
+                            <span class="text-slate-600">Stock: ${item.stock_sistema} u.</span>
+                        </td>
+                        <td class="p-3 text-center">
+                            <span class="px-2.5 py-1 text-[10px] font-bold rounded-full ${esRevisado ? 'bg-emerald-100 text-emerald-800 border border-emerald-300' : 'bg-amber-100 text-amber-800 border border-amber-300'}">
+                                ${item.estado}
+                            </span>
+                        </td>
+                        <td class="p-3 text-xs text-slate-700">
+                            ${esRevisado ? `
+                                <div class="bg-emerald-50 border border-emerald-200 p-2 rounded">
+                                    <strong>Cant. Real:</strong> ${item.cantidad_real !== null ? item.cantidad_real + ' u.' : 'No especificada'}<br>
+                                    <strong>Nota:</strong> ${item.observacion_repositor || 'Sin observaciones'}
+                                </div>
+                            ` : `<span class="text-slate-400 italic">Pendiente de revisión por el repositor...</span>`}
+                        </td>
+                    </tr>
+                `;
+            }).join('');
         }
 
-        // Capturar el código de autorización si Google redirige de vuelta a admin.html
-        window.addEventListener('DOMContentLoaded', async () => {
-            const urlParams = new URLSearchParams(window.location.search);
-            const code = urlParams.get('code');
-
-            if (code) {
-                alert('¡Código de Google recibido! En breve procesaremos el intercambio de token para guardarlo en Supabase.');
-                // Limpiar la URL para evitar bucles
-                window.history.replaceState({}, document.title, window.location.pathname);
-            }
-        });
         // --- REPOSITORES ---
         async function cargarRepositores() {
             const { data, error } = await supabaseClient
@@ -433,6 +648,109 @@
                     </td>
                 </tr>
             `).join('');
+        }
+
+        // --- CARGAR Y ASIGNAR PLANILLA EXCEL ---
+        async function procesarYAsignarPlanillaExcel() {
+            const fileInput = document.getElementById('archivoExcelVencimientos');
+            const repositorSelect = document.getElementById('selectRepositorAsignar');
+            const msg = document.getElementById('msgEstadoPlanilla');
+
+            if (!fileInput.files || fileInput.files.length === 0) {
+                alert('Seleccioná un archivo CSV o Excel.');
+                return;
+            }
+            if (!repositorSelect.value) {
+                alert('Seleccioná a qué repositor querés asignarle esta planilla.');
+                return;
+            }
+
+            const file = fileInput.files[0];
+            const repoId = repositorSelect.value;
+            const repoNombre = repositorSelect.options[repositorSelect.selectedIndex].text;
+
+            msg.style.color = '#0284c7';
+            msg.textContent = 'Procesando archivo...';
+
+            Papa.parse(file, {
+                header: true,
+                skipEmptyLines: true,
+                delimiter: "", 
+                transformHeader: h => h.trim().toUpperCase().replace(/["']/g, ''),
+                complete: async function(results) {
+                    const filas = results.data;
+                    if (!filas || filas.length === 0) {
+                        alert('El archivo está vacío o no se pudo leer.');
+                        msg.textContent = '';
+                        return;
+                    }
+
+                    const registrosAInsertar = filas.map(f => {
+                        const getVal = (...keys) => {
+                            for (let k of keys) {
+                                const foundKey = Object.keys(f).find(kName => kName.includes(k));
+                                if (foundKey && f[foundKey] !== undefined) {
+                                    return f[foundKey].toString().replace(/["']/g, '').trim();
+                                }
+                            }
+                            return '';
+                        };
+
+                        const ean = getVal('EAN', 'CODIGO', 'BARCODE', 'COD');
+                        const desc = getVal('DESCRIPCION', 'DESCRIPCIÓN', 'PRODUCTO', 'DETALLE');
+                        const sec = getVal('SEC', 'SECTOR', 'SECCION', 'SECCIÓN');
+                        
+                        let stockStr = getVal('STOCK', 'STOCK_SISTEMA');
+                        let stock = parseFloat(stockStr.replace(',', '.')) || 0;
+
+                        let cantStr = getVal('CANTIDAD', 'CANT', 'CANTIDAD (UNIDADES)');
+                        let cant = parseFloat(cantStr.replace(',', '.')) || 0;
+
+                        let vto = getVal('VENCIMIENTO', 'FECHA', 'FECHA DE VENCIMIENTO');
+
+                        if (vto.includes('/')) {
+                            const partes = vto.split('/');
+                            if (partes.length === 3) {
+                                vto = `${partes[2]}-${partes[1].padStart(2, '0')}-${partes[0].padStart(2, '0')}`;
+                            }
+                        }
+
+                        return {
+                            tienda_id: tiendaId,
+                            repositor_id: repoId,
+                            nombre_repositor: repoNombre,
+                            sector: sec || 'GENERAL',
+                            codigo_ean: ean,
+                            descripcion: desc || 'SIN DESCRIPCION',
+                            stock_sistema: stock,
+                            cantidad_sistema: cant,
+                            fecha_vencimiento: vto || null,
+                            estado: 'PENDIENTE'
+                        };
+                    }).filter(r => r.codigo_ean !== '');
+
+                    if (registrosAInsertar.length === 0) {
+                        msg.style.color = '#dc2626';
+                        msg.textContent = 'No se pudieron extraer códigos EAN válidos. Verificá los encabezados del archivo.';
+                        return;
+                    }
+
+                    msg.textContent = `Cargando ${registrosAInsertar.length} registros a Supabase...`;
+
+                    const { error } = await supabaseClient
+                        .from('planillas_vencimientos')
+                        .insert(registrosAInsertar);
+
+                    if (error) {
+                        msg.style.color = '#dc2626';
+                        msg.textContent = 'Error al guardar planilla: ' + error.message;
+                    } else {
+                        msg.style.color = '#16a34a';
+                        msg.textContent = `¡Planilla asignada con éxito a ${repoNombre}! (${registrosAInsertar.length} productos)`;
+                        fileInput.value = '';
+                    }
+                }
+            });
         }
 
         async function agregarRepositor() {
@@ -480,23 +798,23 @@
             }
         }
 
-        // --- CATÁLOGO Y CSV ---
+        // --- CATÁLOGO ---
         async function cargarProductos() {
-    const { data, error } = await supabaseClient
-        .from('productos')
-        .select('*')
-        .order('descripcion', { ascending: true }); // Quitamos el filtro por tienda_id para que traiga el catálogo global
+            const { data, error } = await supabaseClient
+                .from('productos')
+                .select('*')
+                .order('descripcion', { ascending: true });
 
-    const tbody = document.getElementById('tablaProductos');
-    if (error || !data || data.length === 0) {
-        tbody.innerHTML = `<tr><td colspan="4" class="p-4 text-center text-slate-400">No hay productos cargados en el catálogo general.</td></tr>`;
-        listaProductosGlobal = [];
-        return;
-    }
+            const tbody = document.getElementById('tablaProductos');
+            if (error || !data || data.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="4" class="p-4 text-center text-slate-400">No hay productos cargados en el catálogo general.</td></tr>`;
+                listaProductosGlobal = [];
+                return;
+            }
 
-    listaProductosGlobal = data;
-    renderizarTablaProductos(data);
-}
+            listaProductosGlobal = data;
+            renderizarTablaProductos(data);
+        }
 
         function renderizarTablaProductos(productos) {
             const tbody = document.getElementById('tablaProductos');
@@ -523,15 +841,11 @@
             renderizarTablaProductos(filtrados);
         }
 
-
         async function guardarProductoIndividual() {
             const ean = document.getElementById('ean').value.trim();
             const descripcion = document.getElementById('descripcion').value.trim();
             const sector = document.getElementById('sector').value.trim();
             const seccion = document.getElementById('seccion').value.trim();
-            const grupo = document.getElementById('grupo').value.trim();
-            const familia = document.getElementById('familia').value.trim();
-            const subfamilia = document.getElementById('subfamilia').value.trim();
             const msg = document.getElementById('statusMsg');
 
             if (!ean || !descripcion) {
@@ -547,10 +861,7 @@
                 codigo_ean: ean,
                 descripcion: descripcion,
                 sector: sector || null,
-                seccion: seccion || null,
-                grupo: grupo || null,
-                familia: familia || null,
-                subfamilia: subfamilia || null
+                seccion: seccion || null
             }]);
 
             if (error) {
@@ -563,14 +874,9 @@
                 document.getElementById('descripcion').value = '';
                 document.getElementById('sector').value = '';
                 document.getElementById('seccion').value = '';
-                document.getElementById('grupo').value = '';
-                document.getElementById('familia').value = '';
-                document.getElementById('subfamilia').value = '';
                 cargarProductos();
             }
         }
-
-        
 
         async function eliminarProducto(id) {
             if (confirm('¿Estás seguro de eliminar este producto del catálogo?')) {
@@ -597,7 +903,6 @@
         }
 
         async function abrirCamaraAdminDirecta() {
-            // Reutilizamos el modal de cámara o creamos uno idéntico en admin si no lo tenías
             const modal = document.getElementById('modalCamaraAdmin');
             if (!modal) {
                 crearModalCamaraAdmin();
@@ -657,95 +962,280 @@
             }, 'image/jpeg');
         }
 
-        // --- VENCIMIENTOS Y AUTOCOMPLETADO EAN ---
-        async function buscarDescripcionEan() {
-            const eanInput = document.getElementById('vtoEanAdmin');
-            const descSpan = document.getElementById('descAutocompletada');
-            const ean = eanInput.value.trim();
-
-            if (!ean) {
-                descSpan.textContent = 'Esperando código EAN...';
-                descSpan.style.color = '#0284c7';
-                productoDetectadoId = null;
-                return;
+        // --- ESCÁNER DE CÁMARA PARA EAN ---
+        function abrirCamaraScannerAdmin() {
+            document.getElementById('scannerModalAdmin').style.display = 'flex';
+            if (!html5QrCodeAdmin) {
+                html5QrCodeAdmin = new Html5Qrcode("readerAdmin");
             }
-
-            descSpan.textContent = 'Buscando en catálogo...';
-            descSpan.style.color = '#0284c7';
-
-            // 1. Intentar buscar primero vinculado a la tienda actual
-            let { data, error } = await supabaseClient
-                .from('productos')
-                .select('id, descripcion')
-                .eq('codigo_ean', ean)
-                .eq('tienda_id', tiendaId)
-                .maybeSingle();
-
-            // 2. Si no está en la tienda actual, buscar de forma global por EAN
-            if (!data) {
-                const { data: globalData, error: globalError } = await supabaseClient
-                    .from('productos')
-                    .select('id, descripcion')
-                    .eq('codigo_ean', ean)
-                    .limit(1)
-                    .maybeSingle();
-                
-                if (globalData) {
-                    data = globalData;
+            
+            html5QrCodeAdmin.start(
+                { facingMode: "environment" }, 
+                { fps: 10, qrbox: 250 }, 
+                qrMsg => {
+                    document.getElementById('vtoEanAdmin').value = qrMsg;
+                    cerrarCamaraScannerAdmin();
+                    buscarDescripcionEan();
                 }
-            }
+            ).catch(err => {
+                console.error("Error al iniciar la cámara:", err);
+                alert("No se pudo iniciar la cámara. Verificá los permisos.");
+                cerrarCamaraScannerAdmin();
+            });
+        }
 
-            if (data) {
-                descSpan.textContent = `✔ ${data.descripcion}`;
-                descSpan.style.color = '#16a34a'; // Verde éxito
-                productoDetectadoId = data.id;
+        function cerrarCamaraScannerAdmin() {
+            const modal = document.getElementById('scannerModalAdmin');
+            if (html5QrCodeAdmin) {
+                html5QrCodeAdmin.stop().then(() => {
+                    modal.style.display = 'none';
+                }).catch(err => {
+                    modal.style.display = 'none';
+                });
             } else {
-                descSpan.textContent = '⚠ EAN no encontrado en el catálogo (se guardará igual)';
-                descSpan.style.color = '#d97706'; // Naranja advertencia
-                productoDetectadoId = null;
+                modal.style.display = 'none';
             }
         }
+
+        // --- VENCIMIENTOS Y AUTOCOMPLETADO EAN ---
         async function cargarLotesAdmin() {
             const { data, error } = await supabaseClient
-                .from('lotes_vencimientos')
-                .select('*, productos(descripcion)')
+                .from('vencimientos')
+                .select('*')
                 .eq('tienda_id', tiendaId)
                 .order('fecha_vencimiento', { ascending: true });
 
-            const tbody = document.getElementById('tablaLotesAdmin');
-            if (error || !data || data.length === 0) {
-                tbody.innerHTML = `<tr><td colspan="6" class="p-4 text-center text-slate-400">No hay lotes registrados.</td></tr>`;
+            if (error) {
+                console.error('Error al cargar lotes:', error);
                 return;
             }
-            const fotoInput = document.getElementById('fotoLoteAdmin');
-let fotoUrl = null;
-if (fotoInput.files.length > 0) {
-    fotoUrl = 'Adjunto cargado'; // O la lógica para subirlo a Supabase Storage
-}
 
-            tbody.innerHTML = data.map(lote => {
-                const desc = lote.productos?.descripcion || 'Sin descripción en catálogo';
+            todosLosLotesAdmin = data || [];
+            document.getElementById('badgeVtosCount').textContent = todosLosLotesAdmin.length;
+
+            generarChipsFiltros(todosLosLotesAdmin);
+            renderizarTablaLotesFiltrados();
+        }
+
+        function generarChipsFiltros(lotes) {
+            const containerSector = document.getElementById('chipsSectorContainer');
+            containerSector.innerHTML = SECTORES_FIJOS.map(sector => {
+                const activo = sectoresSeleccionados.has(sector);
+                return `
+                    <button onclick="toggleFiltroSector('${sector}')" 
+                        class="text-xs font-bold px-3 py-1.5 rounded-full border transition ${
+                            activo 
+                                ? 'bg-blue-900 text-white border-blue-900 shadow-sm' 
+                                : 'bg-slate-100 text-slate-700 border-slate-200 hover:bg-slate-200'
+                        }">
+                        ${sector} ${activo ? '✓' : ''}
+                    </button>
+                `;
+            }).join('');
+
+            const containerSeccion = document.getElementById('chipsSeccionContainer');
+            containerSeccion.innerHTML = SECCIONES_FIJAS.map(seccion => {
+                const activo = seccionesSeleccionadas.has(seccion);
+                return `
+                    <button onclick="toggleFiltroSeccion('${seccion}')" 
+                        class="text-xs font-bold px-3 py-1.5 rounded-full border transition ${
+                            activo 
+                                ? 'bg-blue-900 text-white border-blue-900 shadow-sm' 
+                                : 'bg-slate-100 text-slate-700 border-slate-200 hover:bg-slate-200'
+                        }">
+                        ${seccion} ${activo ? '✓' : ''}
+                    </button>
+                `;
+            }).join('');
+        }
+
+        function toggleFiltroSector(sector) {
+            if (sectoresSeleccionados.has(sector)) {
+                sectoresSeleccionados.delete(sector);
+            } else {
+                sectoresSeleccionados.add(sector);
+            }
+            generarChipsFiltros(todosLosLotesAdmin);
+            renderizarTablaLotesFiltrados();
+        }
+
+        function toggleFiltroSeccion(seccion) {
+            if (seccionesSeleccionadas.has(seccion)) {
+                seccionesSeleccionadas.delete(seccion);
+            } else {
+                seccionesSeleccionadas.add(seccion);
+            }
+            generarChipsFiltros(todosLosLotesAdmin);
+            renderizarTablaLotesFiltrados();
+        }
+
+        function limpiarFiltrosChips() {
+            sectoresSeleccionados.clear();
+            seccionesSeleccionadas.clear();
+            generarChipsFiltros(todosLosLotesAdmin);
+            renderizarTablaLotesFiltrados();
+        }
+
+        function renderizarTablaLotesFiltrados() {
+            const tbody = document.getElementById('tablaLotesAdmin');
+            
+            const lotesFiltrados = todosLosLotesAdmin.filter(lote => {
+                if (sectoresSeleccionados.size > 0) {
+                    const matchSector = sectoresSeleccionados.has(lote.sector);
+                    if (!matchSector) return false;
+                }
+
+                if (seccionesSeleccionadas.size > 0) {
+                    const matchSeccion = seccionesSeleccionadas.has(lote.seccion);
+                    if (!matchSeccion) return false;
+                }
+
+                return true;
+            });
+
+            if (lotesFiltrados.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="7" class="p-4 text-center text-slate-400">No hay lotes que coincidan con los filtros seleccionados.</td></tr>`;
+                return;
+            }
+
+            tbody.innerHTML = lotesFiltrados.map(lote => {
+                const desc = lote.nombre_producto || 'Sin descripción';
+                const ean = lote.codigo_barras || lote.codigo_ean || '-';
                 const notasCount = Array.isArray(lote.bitacora_observaciones) ? lote.bitacora_observaciones.length : 0;
 
                 return `
                     <tr class="border-b hover:bg-slate-50">
                         <td class="p-3">
                             <div class="font-bold text-slate-800 text-xs">${desc}</div>
-                            <div class="font-mono text-[11px] text-slate-400">${lote.codigo_ean}</div>
+                            <div class="font-mono text-[11px] text-slate-400">Sec: ${lote.seccion || '-'} | EAN: ${ean}</div>
                         </td>
-                        <td class="p-3 font-mono text-xs font-bold text-red-600">${lote.fecha_vencimiento}</td>
-                        <td class="p-3 font-bold text-slate-700">${lote.cantidad_unidades} u.</td>
-                        <td class="p-3 text-xs text-slate-600">${lote.creado_por || 'Repositor'}</td>
+                        <td class="p-3 font-mono text-xs font-bold text-red-600">${lote.fecha_vencimiento || '-'}</td>
+                        <td class="p-3 font-bold text-slate-700">${lote.cantidad || lote.cantidad_unidades || 0} u.</td>
+                        <td class="p-3 text-xs text-slate-600">${lote.registrado_por || 'Repositor'}</td>
                         <td class="p-3 text-xs text-slate-600">${lote.accion_realizada || '-'}</td>
                         <td class="p-3 text-center">
-                            <button onclick="abrirModalBitacora('${lote.id}', '${lote.codigo_ean}', '${desc.replace(/'/g, "\\'")}', '${encodeURIComponent(JSON.stringify(lote.bitacora_observaciones || []))}', '${lote.foto_url}')" 
-    class="text-xs bg-blue-100 hover:bg-blue-200 text-blue-800 font-bold px-3 py-1.5 rounded-lg flex items-center justify-center gap-1 mx-auto">
-    📝 Notes (${notasCount})
-</button>
+                            <button onclick="abrirModalBitacora('${lote.id}', '${ean}', '${desc.replace(/'/g, "\\'")}', '${encodeURIComponent(JSON.stringify(lote.bitacora_observaciones || []))}', '${lote.foto_url}')" 
+                                class="text-xs bg-blue-100 hover:bg-blue-200 text-blue-800 font-bold px-3 py-1.5 rounded-lg flex items-center justify-center gap-1 mx-auto">
+                                📝 Notes (${notasCount})
+                            </button>
+                        </td>
+                        <td class="p-3 text-center">
+                            <button onclick="eliminarLoteAdmin('${lote.id}', '${desc.replace(/'/g, "\\'")}')" 
+                                class="text-xs bg-red-100 hover:bg-red-200 text-red-700 font-bold px-2.5 py-1.5 rounded-lg transition" title="Enviar a papelera">
+                                🗑️ Borrar
+                            </button>
                         </td>
                     </tr>
                 `;
             }).join('');
+        }
+
+        async function eliminarLoteAdmin(id, nombreProducto) {
+            if (confirm(`¿Estás seguro de enviar a la papelera el lote de "${nombreProducto}"?`)) {
+                const { data: loteAEliminar, error: errorFetch } = await supabaseClient
+                    .from('vencimientos')
+                    .select('*')
+                    .eq('id', id)
+                    .single();
+
+                if (errorFetch || !loteAEliminar) {
+                    alert('No se pudo encontrar el lote para respaldar.');
+                    return;
+                }
+
+                const ahora = new Date();
+                const fechaEliminacionStr = ahora.toLocaleString('es-AR', { 
+                    day: '2-digit', month: '2-digit', year: 'numeric', 
+                    hour: '2-digit', minute: '2-digit' 
+                });
+
+                const loteRespaldo = {
+                    tienda_id: loteAEliminar.tienda_id,
+                    codigo_barras: loteAEliminar.codigo_barras,
+                    nombre_producto: loteAEliminar.nombre_producto,
+                    fecha_vencimiento: loteAEliminar.fecha_vencimiento,
+                    cantidad: loteAEliminar.cantidad,
+                    accion_realizada: loteAEliminar.accion_realizada,
+                    registrado_por: loteAEliminar.registrado_por,
+                    foto_url: loteAEliminar.foto_url,
+                    sector: loteAEliminar.sector,
+                    seccion: loteAEliminar.seccion,
+                    grupo: loteAEliminar.grupo,
+                    familia: loteAEliminar.familia,
+                    subfamilia: loteAEliminar.subfamilia,
+                    bitacora_observaciones: loteAEliminar.bitacora_observaciones,
+                    fecha_eliminacion: fechaEliminacionStr,
+                    eliminado_por: `Admin (${codigoSucursal})`
+                };
+
+                const { error: errorRespaldo } = await supabaseClient
+                    .from('vencimientos_borrados')
+                    .insert([loteRespaldo]);
+
+                if (errorRespaldo) {
+                    alert('Error al copiar el registro en vencimientos_borrados: ' + errorRespaldo.message);
+                    return;
+                }
+
+                const { error: errorDelete } = await supabaseClient
+                    .from('vencimientos')
+                    .delete()
+                    .eq('id', id);
+
+                if (errorDelete) {
+                    alert('El registro fue copiado pero ocurrió un error al quitarlo de la lista activa: ' + errorDelete.message);
+                } else {
+                    alert('¡El lote fue enviado a la papelera correctamente!');
+                    cargarLotesAdmin();
+                }
+            }
+        }
+
+        function imprimirReporteVencimientos() {
+            const lotesAImprimir = todosLosLotesAdmin.filter(lote => {
+                if (sectoresSeleccionados.size > 0 && !sectoresSeleccionados.has(lote.sector)) return false;
+                if (seccionesSeleccionadas.size > 0 && !seccionesSeleccionadas.has(lote.seccion)) return false;
+                return true;
+            });
+
+            if (lotesAImprimir.length === 0) {
+                alert('No hay lotes para imprimir con los filtros seleccionados.');
+                return;
+            }
+
+            const filtrosTexto = [];
+            if (sectoresSeleccionados.size > 0) filtrosTexto.push(`Sectores: ${Array.from(sectoresSeleccionados).join(', ')}`);
+            if (seccionesSeleccionadas.size > 0) filtrosTexto.push(`Secciones: ${Array.from(seccionesSeleccionadas).join(', ')}`);
+
+            document.getElementById('lblSucursalImpresion').textContent = `${codigoSucursal} - ${nombreSucursal || ''}`;
+            document.getElementById('lblFiltrosImpresion').textContent = filtrosTexto.length > 0 ? filtrosTexto.join(' | ') : 'TODOS LOS SECTORES Y SECCIONES';
+
+            const tbodyPrint = document.getElementById('cuerpoTablaImpresion');
+            tbodyPrint.innerHTML = lotesAImprimir.map(lote => {
+                const secCompleta = lote.seccion || '15';
+                const secNumero = secCompleta.split(' - ')[0] || secCompleta;
+                const ean = lote.codigo_barras || lote.codigo_ean || '';
+                const desc = lote.nombre_producto || 'SIN DESCRIPCION';
+                const cantidad = lote.cantidad || lote.cantidad_unidades || 0;
+                const vto = lote.fecha_vencimiento ? lote.fecha_vencimiento.split('-').reverse().join('/') : '';
+
+                return `
+                    <tr style="border-bottom: 1px dotted #ccc;">
+                        <td style="padding: 4px;">${secNumero}</td>
+                        <td style="padding: 4px; font-family: monospace;">${ean}</td>
+                        <td style="padding: 4px; text-transform: uppercase;">${desc}</td>
+                        <td style="padding: 4px; text-align: right; font-weight: bold;">${cantidad}</td>
+                        <td style="padding: 4px; text-align: right;">${vto}</td>
+                    </tr>
+                `;
+            }).join('');
+
+            const contenedorPrint = document.getElementById('areaImpresionReporte');
+            contenedorPrint.classList.remove('hidden');
+
+            window.print();
+
+            contenedorPrint.classList.add('hidden');
         }
 
         async function guardarLoteAdminOficial() {
@@ -766,7 +1256,6 @@ if (fotoInput.files.length > 0) {
 
             let fotoUrl = null;
 
-            // Si seleccionó o sacó una foto, la subimos a Supabase Storage
             if (fotoInput.files.length > 0) {
                 const archivo = fotoInput.files[0];
                 const nombreArchivo = `${tiendaId}_${Date.now()}_${archivo.name}`;
@@ -781,7 +1270,6 @@ if (fotoInput.files.length > 0) {
                     return;
                 }
 
-                // Obtener URL pública de la foto
                 const { data: publicUrlData } = supabaseClient.storage
                     .from('fotos_lotes')
                     .getPublicUrl(nombreArchivo);
@@ -795,15 +1283,22 @@ if (fotoInput.files.length > 0) {
                 hour: '2-digit', minute: '2-digit' 
             });
 
-            const { error } = await supabaseClient.from('lotes_vencimientos').insert([{
+            const catInfo = window.tempProductoCat || {};
+
+            const { error } = await supabaseClient.from('vencimientos').insert([{
                 tienda_id: tiendaId,
-                producto_id: productoDetectadoId,
-                codigo_ean: ean,
+                codigo_barras: ean,          
                 fecha_vencimiento: fecha,
-                cantidad_unidades: cantidad,
+                cantidad: cantidad,          
                 accion_realizada: accion,
-                creado_por: `Administrador (${codigoSucursal})`,
-                foto_url: fotoUrl, // URL en la nube de Supabase
+                registrado_por: `Administrador (${codigoSucursal})`, 
+                foto_url: fotoUrl, 
+                nombre_producto: document.getElementById('descAutocompletada').textContent.replace('✔ ', ''), 
+                sector: catInfo.sector || '1 - P.G.C',
+                seccion: catInfo.seccion || '15 - P.A.S',
+                grupo: catInfo.grupo || null,
+                familia: catInfo.familia || null,
+                subfamilia: catInfo.subfamilia || null,
                 bitacora_observaciones: [{
                     fechaHora: fechaHoraStr,
                     autor: `Admin (${codigoSucursal})`,
@@ -825,6 +1320,7 @@ if (fotoInput.files.length > 0) {
                 document.getElementById('textoArchivoAdmin').textContent = 'Ningún archivo seleccionado';
                 document.getElementById('descAutocompletada').textContent = 'Esperando código EAN...';
                 productoDetectadoId = null;
+                window.tempProductoCat = null;
 
                 cargarLotesAdmin();
             }
@@ -842,7 +1338,6 @@ if (fotoInput.files.length > 0) {
             document.getElementById('modalEanProducto').textContent = `${ean} - ${desc}`;
             document.getElementById('nuevaAnotacionInput').value = '';
             
-            // Manejar visualización de la foto
             const seccionFoto = document.getElementById('seccionFotoModal');
             const imgModal = document.getElementById('imgLoteModal');
             const btnDescargar = document.getElementById('btnDescargarFoto');
@@ -858,6 +1353,7 @@ if (fotoInput.files.length > 0) {
             renderizarHistorialModal();
             document.getElementById('modalBitacora').classList.remove('hidden');
         }
+
         function cerrarModalBitacora() {
             document.getElementById('modalBitacora').classList.add('hidden');
             loteSeleccionadoId = null;
@@ -902,7 +1398,7 @@ if (fotoInput.files.length > 0) {
             const bitacoraActualizada = [...bitacoraActual, nuevaNota];
 
             const { error } = await supabaseClient
-                .from('lotes_vencimientos')
+                .from('vencimientos')
                 .update({ bitacora_observaciones: bitacoraActualizada })
                 .eq('id', loteSeleccionadoId);
 
@@ -913,6 +1409,65 @@ if (fotoInput.files.length > 0) {
                 renderizarHistorialModal();
                 input.value = '';
                 cargarLotesAdmin();
+            }
+        }
+
+        async function descargarExcelVencimientos() {
+            try {
+                const { data: lotes, error } = await supabaseClient
+                    .from('vencimientos')
+                    .select('*')
+                    .eq('tienda_id', tiendaId)
+                    .order('fecha_vencimiento', { ascending: true });
+
+                if (error) {
+                    alert('Error al obtener datos de la base de datos: ' + error.message);
+                    return;
+                }
+
+                if (!lotes || lotes.length === 0) {
+                    alert('No hay lotes de vencimiento registrados para exportar.');
+                    return;
+                }
+
+                let csvContent = "\uFEFF"; 
+                csvContent += "Codigo EAN;Descripcion del Producto;Fecha de Vencimiento;Cantidad (Unidades);Accion Realizada;Registrado Por;Fecha de Registro;Foto URL;Historial / Bitacora\n";
+
+                lotes.forEach(lote => {
+                    let notasTexto = '-';
+                    if (Array.isArray(lote.bitacora_observaciones) && lote.bitacora_observaciones.length > 0) {
+                        notasTexto = lote.bitacora_observaciones
+                            .map(item => `[${item.fechaHora || ''} - ${item.autor || 'Admin'}]: ${item.nota || ''}`)
+                            .join(' | ');
+                    }
+
+                    const ean = (lote.codigo_barras || lote.codigo_ean || '').replace(/;/g, '');
+                    const desc = (lote.nombre_producto || 'Sin descripción').replace(/;/g, ',');
+                    const fechaVto = lote.fecha_vencimiento || '';
+                    const cantidad = lote.cantidad || lote.cantidad_unidades || 0;
+                    const accion = (lote.accion_realizada || 'SIN ACCIONAR').replace(/;/g, ',');
+                    const regPor = (lote.registrado_por || 'Repositor').replace(/;/g, ',');
+                    const fechaReg = lote.created_at ? new Date(lote.created_at).toLocaleString('es-AR') : '';
+                    const foto = lote.foto_url || 'Sin foto';
+                    const bitacora = notasTexto.replace(/;/g, ',').replace(/(\r\n|\n|\r)/gm, " ");
+
+                    csvContent += `"${ean}";"${desc}";"${fechaVto}";"${cantidad}";"${accion}";"${regPor}";"${fechaReg}";"${foto}";"${bitacora}"\n`;
+                });
+
+                const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+                const url = URL.createObjectURL(blob);
+                const link = document.createElement("a");
+                
+                const hoy = new Date().toISOString().split('T')[0];
+                link.setAttribute("href", url);
+                link.setAttribute("download", `Vencimientos_Sucursal_${codigoSucursal}_${hoy}.csv`);
+                document.body.appendChild(link);
+                link.click();
+                document.body.removeChild(link);
+
+            } catch (err) {
+                console.error('Error al generar archivo:', err);
+                alert('Ocurrió un error al exportar el archivo.');
             }
         }
 
