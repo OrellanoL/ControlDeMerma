@@ -232,14 +232,16 @@
                 }
 
                 // Guardamos la sesión del repositor asociada a su tienda correspondiente
-                localStorage.setItem('sesion_actual', JSON.stringify({
-                    tipo: 'repositor',
-                    dni: usuarioData.dni,
-                    nombre: `${usuarioData.nombre || ''} ${usuarioData.apellido || ''}`.trim(),
-                    id_tienda: usuarioData.tiendas ? usuarioData.tiendas.id : usuarioData.tienda_id,
-                    codigo_tienda: usuarioData.tiendas ? usuarioData.tiendas.codigo_sucursal : null,
-                    nombre_tienda: usuarioData.tiendas ? usuarioData.tiendas.nombre_sucursal : null
-                }));
+                // Guardamos la sesión del repositor asociada a su tienda correspondiente
+localStorage.setItem('sesion_actual', JSON.stringify({
+    tipo: 'repositor',
+    id: usuarioData.id, // <-- ¡Agregamos esto para que la app reconozca el ID del repositor!
+    dni: usuarioData.dni,
+    nombre: `${usuarioData.nombre || ''} ${usuarioData.apellido || ''}`.trim(),
+    id_tienda: usuarioData.tiendas ? usuarioData.tiendas.id : usuarioData.tienda_id,
+    codigo_tienda: usuarioData.tiendas ? usuarioData.tiendas.codigo_sucursal : null,
+    nombre_tienda: usuarioData.tiendas ? usuarioData.tiendas.nombre_sucursal : null
+}));
 
                 localStorage.setItem('repositorDni', usuarioData.dni);
                 localStorage.setItem('rolUsuario', 'repositor');
