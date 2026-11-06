@@ -6,51 +6,54 @@
     <title>Control Interno de Merma - Login</title>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
+        * {
+            box-sizing: border-box;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+        }
         body {
-            font-family: Arial, sans-serif;
-            background-color: #f4f6f9;
+            background: linear-gradient(135deg, #002D62 0%, #001B3A 100%);
             display: flex;
             justify-content: center;
             align-items: center;
             height: 100vh;
             margin: 0;
+            padding: 16px;
         }
         .login-card {
             background: white;
-            border-radius: 12px;
-            box-shadow: 0 6px 20px rgba(0,0,0,0.1);
+            border-radius: 16px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
             width: 100%;
             max-width: 420px;
             overflow: hidden;
+            animation: fadeIn 0.4s ease-in-out;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
         }
         .card-header {
             background: #0033a0;
             color: white;
             text-align: center;
-            padding: 25px 20px;
+            padding: 30px 20px;
         }
-        .badge {
-            background: #e60000;
-            color: white;
-            padding: 4px 12px;
-            border-radius: 20px;
-            font-size: 12px;
-            font-weight: bold;
-            text-transform: uppercase;
-            letter-spacing: 1px;
-            display: inline-block;
-            margin-bottom: 10px;
+        .logo-img {
+            height: 72px;
+            margin-bottom: 12px;
+            object-fit: contain;
+            filter: brightness(0) invert(1); /* Vuelve el logo blanco puro para que combine perfectamente con el fondo azul */
         }
         .card-header h1 {
             margin: 0;
-            font-size: 20px;
-            font-weight: bold;
+            font-size: 21px;
+            font-weight: 700;
             letter-spacing: 0.5px;
         }
         .card-header p {
-            margin: 5px 0 0 0;
+            margin: 6px 0 0 0;
             font-size: 13px;
-            opacity: 0.85;
+            color: #cbd5e1;
         }
         .card-body {
             padding: 30px;
@@ -61,54 +64,67 @@
         label {
             display: block;
             margin-bottom: 8px;
-            color: #333;
-            font-weight: bold;
-            font-size: 12px;
+            color: #1e293b;
+            font-weight: 700;
+            font-size: 11px;
             text-transform: uppercase;
-            letter-spacing: 0.5px;
+            letter-spacing: 0.8px;
         }
         input {
             width: 100%;
-            padding: 12px 15px;
-            border: 1px solid #ccd1d9;
-            border-radius: 6px;
+            padding: 13px 15px;
+            border: 2px solid #e2e8f0;
+            border-radius: 10px;
             box-sizing: border-box;
             font-size: 15px;
-            transition: border-color 0.2s;
+            color: #0f172a;
+            background: #f8fafc;
+            transition: all 0.2s;
         }
         input:focus {
             border-color: #0033a0;
+            background: #ffffff;
             outline: none;
+            box-shadow: 0 0 0 4px rgba(0, 51, 160, 0.1);
         }
         .helper-text {
             font-size: 11px;
-            color: #888;
-            margin-top: 5px;
+            color: #64748b;
+            margin-top: 6px;
             display: block;
         }
         .btn-submit {
             width: 100%;
             padding: 14px;
-            background-color: #1a56db;
+            background-color: #0033a0;
             color: white;
             border: none;
-            border-radius: 6px;
-            font-size: 15px;
-            font-weight: bold;
+            border-radius: 10px;
+            font-size: 14px;
+            font-weight: 700;
             cursor: pointer;
-            transition: background-color 0.2s;
+            transition: all 0.2s;
             margin-top: 10px;
+            text-transform: uppercase;
+            letter-spacing: 0.8px;
+            box-shadow: 0 4px 12px rgba(0, 51, 160, 0.3);
         }
         .btn-submit:hover {
-            background-color: #0033a0;
+            background-color: #00226e;
+            transform: translateY(-1px);
+        }
+        .btn-submit:active {
+            transform: translateY(0);
         }
         .card-footer {
-            background: #fafbfc;
-            border-top: 1px solid #eaeef2;
+            background: #f8fafc;
+            border-top: 1px solid #f1f5f9;
             padding: 15px;
             text-align: center;
-            font-size: 12px;
-            color: #666;
+            font-size: 11px;
+            color: #64748b;
+            font-weight: 600;
+            letter-spacing: 0.3px;
         }
         #mensaje {
             text-align: center;
@@ -121,9 +137,9 @@
 <body>
 
     <div class="login-card">
-        <!-- Cabecera Institucional -->
+        <!-- Cabecera Institucional limpia sin recuadro -->
         <div class="card-header">
-            <span class="badge">Carrefour Express</span>
+            <img src="https://raw.githubusercontent.com/OrellanoL/ProductosCatalogo/main/carrefourexpresslogo.webp" alt="Carrefour Express" class="logo-img">
             <h1>Control Interno de Merma</h1>
             <p>Gestión de Vencimientos y Stock por Sucursal</p>
         </div>
@@ -162,7 +178,6 @@
 
         document.getElementById('loginForm').addEventListener('submit', async (e) => {
             e.preventDefault();
-            // Corregido: uso de paréntesis en lugar de corchetes
             const inputUsuario = document.getElementById('usuario').value.trim().toLowerCase();
             const password = document.getElementById('password').value.trim();
             const mensaje = document.getElementById('mensaje');
@@ -232,16 +247,15 @@
                 }
 
                 // Guardamos la sesión del repositor asociada a su tienda correspondiente
-                // Guardamos la sesión del repositor asociada a su tienda correspondiente
-localStorage.setItem('sesion_actual', JSON.stringify({
-    tipo: 'repositor',
-    id: usuarioData.id, // <-- ¡Agregamos esto para que la app reconozca el ID del repositor!
-    dni: usuarioData.dni,
-    nombre: `${usuarioData.nombre || ''} ${usuarioData.apellido || ''}`.trim(),
-    id_tienda: usuarioData.tiendas ? usuarioData.tiendas.id : usuarioData.tienda_id,
-    codigo_tienda: usuarioData.tiendas ? usuarioData.tiendas.codigo_sucursal : null,
-    nombre_tienda: usuarioData.tiendas ? usuarioData.tiendas.nombre_sucursal : null
-}));
+                localStorage.setItem('sesion_actual', JSON.stringify({
+                    tipo: 'repositor',
+                    id: usuarioData.id,
+                    dni: usuarioData.dni,
+                    nombre: `${usuarioData.nombre || ''} ${usuarioData.apellido || ''}`.trim(),
+                    id_tienda: usuarioData.tiendas ? usuarioData.tiendas.id : usuarioData.tienda_id,
+                    codigo_tienda: usuarioData.tiendas ? usuarioData.tiendas.codigo_sucursal : null,
+                    nombre_tienda: usuarioData.tiendas ? usuarioData.tiendas.nombre_sucursal : null
+                }));
 
                 localStorage.setItem('repositorDni', usuarioData.dni);
                 localStorage.setItem('rolUsuario', 'repositor');
