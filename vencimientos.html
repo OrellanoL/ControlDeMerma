@@ -15,8 +15,8 @@
         .app-bar-title { font-size: 16px; font-weight: 600; color: #f3f4f6; }
         .user-badge { font-size: 11px; background: #1f2937; color: #fbbf24; border: 1px solid #374151; padding: 4px 10px; border-radius: 20px; font-weight: 600; }
 
-        .tab-container { display: flex; background: #111827; border-bottom: 1px solid #1f2937; position: sticky; top: 56px; z-index: 9; }
-        .tab-btn { flex: 1; padding: 12px 0; text-align: center; font-size: 13px; font-weight: 700; color: #9ca3af; background: transparent; border: none; border-bottom: 2px solid transparent; cursor: pointer; transition: all 0.2s; }
+        .tab-container { display: flex; background: #111827; border-bottom: 1px solid #1f2937; position: sticky; top: 56px; z-index: 9; overflow-x: auto; }
+        .tab-btn { flex: 1; min-width: 110px; padding: 12px 6px; text-align: center; font-size: 11px; font-weight: 700; color: #9ca3af; background: transparent; border: none; border-bottom: 2px solid transparent; cursor: pointer; transition: all 0.2s; white-space: nowrap; }
         .tab-btn.active { color: #fbbf24; border-bottom: 2px solid #fbbf24; background: #1f2937; }
 
         .tab-content { display: none; padding: 20px 16px; max-width: 500px; margin: 0 auto; }
@@ -74,16 +74,19 @@
             <span class="app-bar-title">🛒 Carrefour Express</span>
         </div>
         <div style="display: flex; align-items: center; gap: 8px;">
-            <div class="user-badge" id="userBadge">Ludmila Orellano</div>
+            <div class="user-badge" id="userBadge">Cargando...</div>
             <button onclick="cerrarSesion()" style="background: #1f2937; color: #ef4444; border: 1px solid #374151; padding: 4px 10px; border-radius: 6px; font-size: 11px; font-weight: bold; cursor: pointer;">⎋ Salir</button>
         </div>
     </div>
 
+    <!-- PESTAÑAS DE NAVEGACIÓN -->
     <div class="tab-container">
-        <button class="tab-btn active" id="tabBtnForm" onclick="cambiarTab('form')">➕ NUEVO VENCIMIENTO</button>
+        <button class="tab-btn active" id="tabBtnForm" onclick="cambiarTab('form')">➕ NUEVO</button>
         <button class="tab-btn" id="tabBtnCargas" onclick="cambiarTab('cargas')">📋 MIS CARGAS (<span id="cantCargasCount">0</span>)</button>
+        <button class="tab-btn" id="tabBtnPlanilla" onclick="cambiarTab('planilla')">📋 PLANILLA</button>
     </div>
 
+    <!-- SECCIÓN 1: NUEVO VENCIMIENTO -->
     <div id="tabFormContent" class="tab-content active">
         <div class="form-section-title">Datos del Registro</div>
         <div class="form-section-subtitle">Complete la información obligatoria (*)</div>
@@ -141,6 +144,7 @@
         </div>
     </div>
 
+    <!-- SECCIÓN 2: MIS CARGAS -->
     <div id="tabCargasContent" class="tab-content">
         <div class="form-section-title">Productos Cargados</div>
         <div class="form-section-subtitle">Vencimientos que registraste en este turno</div>
@@ -149,11 +153,52 @@
         </div>
     </div>
 
+    <!-- SECCIÓN 3: PLANILLA ASIGNADA POR EL ADMIN -->
+    <div id="tabPlanillaContent" class="tab-content">
+        <div class="form-section-title">Planilla Asignada</div>
+        <div class="form-section-subtitle">Toca un producto para revisar stock y dejar notas</div>
+        <div id="listaPlanillaRepositor">
+            <div style="text-align: center; color: #9ca3af; padding: 30px;">Cargando planilla asignada...</div>
+        </div>
+    </div>
+
+    <!-- BARRA INFERIOR DE GUARDAR -->
     <div class="bottom-bar" id="bottomBarSave">
         <button class="btn-cancel" onclick="limpiarFormulario()">Cancel</button>
         <button class="btn-save" onclick="guardarRegistro()">Save ✓</button>
     </div>
 
+    <!-- MODAL DE REVISIÓN DE PLANILLA -->
+    <div class="modal-overlay" id="modalRevisionPlanilla">
+        <div class="modal-card">
+            <div class="modal-header">
+                <span>📋 Revisar Ítem de Planilla</span>
+                <span onclick="cerrarModalRevision()" style="cursor: pointer; font-size: 18px;">✕</span>
+            </div>
+            <div class="modal-body space-y-4">
+                <div>
+                    <h4 id="modalRevDesc" class="font-bold text-sm text-amber-400"></h4>
+                    <p id="modalRevInfo" class="text-xs text-slate-400 font-mono mt-1"></p>
+                </div>
+
+                <div class="field-group">
+                    <div class="field-label">Cantidad Real Encontrada</div>
+                    <input type="number" id="inputCantRealRevision" class="form-input" placeholder="Ej: 3">
+                </div>
+
+                <div class="field-group">
+                    <div class="field-label">Observación / Nota del Repositor</div>
+                    <textarea id="inputNotaRevision" class="form-input" style="height: 80px; padding: 10px; resize: none;" placeholder="Ej: Se rebajó precio, faltan en góndola..."></textarea>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" onclick="cerrarModalRevision()" style="background: transparent; border: 1px solid #374151; color: #f3f4f6; padding: 8px 16px; border-radius: 6px; cursor: pointer;">Cancelar</button>
+                <button type="button" onclick="guardarRevisionItemActual()" style="background: #fbbf24; border: none; color: #111827; padding: 8px 16px; border-radius: 6px; font-weight: bold; cursor: pointer;">Marcar Revisado</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL BITÁCORA -->
     <div class="modal-overlay" id="modalBitacora">
         <div class="modal-card">
             <div class="modal-header">
@@ -172,6 +217,7 @@
         </div>
     </div>
 
+    <!-- MODAL ACCIONES -->
     <div class="modal-overlay" id="modalAcciones">
         <div class="modal-card">
             <div class="modal-header">Accion Realizada</div>
@@ -181,6 +227,7 @@
         </div>
     </div>
 
+    <!-- MODAL CÁMARA FOTO -->
     <div id="modalCamara" style="display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.9); z-index: 300; flex-direction: column; align-items: center; justify-content: center; padding: 20px;">
         <video id="videoCamara" autoplay playsinline style="width: 100%; max-width: 400px; border-radius: 8px; background: #000;"></video>
         <canvas id="canvasCamara" style="display: none;"></canvas>
@@ -190,22 +237,25 @@
         </div>
     </div>
 
+    <!-- MODAL ESCÁNER EAN -->
     <div id="scannerModal" style="display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.85); z-index: 100; flex-direction: column; align-items: center; justify-content: center; padding: 20px;">
         <div id="reader" style="width: 100%; max-width: 360px; background: #fff; border-radius: 8px; overflow: hidden;"></div>
         <button onclick="cerrarCamaraScanner()" style="margin-top: 15px; background: #1f2937; color: #f3f4f6; border: 1px solid #374151; padding: 10px 20px; border-radius: 8px; font-weight: bold; cursor: pointer;">Cerrar Cámara</button>
     </div>
 
     <script>
-        const SUPABASE_URL = 'https://dofeahjuerqgjyxhnmdm.supabase.co';
-        const SUPABASE_ANON_KEY = 'sb_publishable_ArCel3W6N_-D0QZG10MlgA_jM2IcnuH';
+        const SUPABASE_URL = 'https://jtpobhgjjwrgtmzxvwsp.supabase.co';
+        const SUPABASE_ANON_KEY = 'sb_publishable_7lS6ptxFvZVqXXWdcbHopw_YNXlUTOT'; 
         const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
         let tiendaIdGlobal = null;
+        let repositorIdGlobal = null;
         let html5QrCode = null;
         let selectedAccionValue = "SIN ACCIONAR";
         let streamCamara = null;
         let loteSeleccionadoBitacoraId = null;
-        let loteEditandoId = null;
+        let itemPlanillaSeleccionadoId = null;
+        let productoActualInfo = { sector: null, seccion: null, grupo:null, familia: null, subfamilia: null };
 
         const listaAcciones = [
             "SIN ACCIONAR", "Cargado en FORMULARIO P.A.S", "Cargado en ULTIMA MILLA",
@@ -214,34 +264,42 @@
         ];
 
         async function init() {
-            document.getElementById('userBadge').textContent = "Conectando...";
+            const sesion = JSON.parse(localStorage.getItem('sesion_actual') || '{}');
 
-            const { data: tienda, error } = await supabaseClient.from('tiendas').select('id').eq('codigo_sucursal', '429').single();
-            
-            if (error || !tienda) {
-                alert("No se pudo vincular la sucursal 429.");
+            // Verificamos de forma flexible que exista al menos el DNI o el ID
+            if (!sesion.dni && !sesion.id) {
+                alert("No hay una sesión activa. Por favor, iniciá sesión nuevamente.");
+                window.location.href = 'login.html';
                 return;
             }
 
-            tiendaIdGlobal = tienda.id;
+            // Asignamos los identificadores contemplando ambas estructuras
+            tiendaIdGlobal = sesion.id_tienda || sesion.tienda_id;
+            repositorIdGlobal = sesion.id || sesion.dni; 
+            const nombreRepositor = sesion.nombre || 'Repositor';
+
             renderAcciones(listaAcciones);
 
-            // Recuperación limpia y robusta del nombre del repositor (sin romper nada)
-            const nombreRepositor = localStorage.getItem('repositor_nombre') || localStorage.getItem('repositorNombre') || localStorage.getItem('nombre') || 'Ludmila Orellano';
             document.getElementById('registradoPorInput').value = nombreRepositor;
             document.getElementById('userBadge').textContent = nombreRepositor;
 
             cargarMisCargas();
+            cargarPlanillaRepositor(repositorIdGlobal);
         }
 
         function cambiarTab(tab) {
             document.getElementById('tabBtnForm').classList.toggle('active', tab === 'form');
             document.getElementById('tabBtnCargas').classList.toggle('active', tab === 'cargas');
+            document.getElementById('tabBtnPlanilla').classList.toggle('active', tab === 'planilla');
+
             document.getElementById('tabFormContent').classList.toggle('active', tab === 'form');
             document.getElementById('tabCargasContent').classList.toggle('active', tab === 'cargas');
+            document.getElementById('tabPlanillaContent').classList.toggle('active', tab === 'planilla');
+
             document.getElementById('bottomBarSave').style.display = (tab === 'form') ? 'flex' : 'none';
 
             if (tab === 'cargas') cargarMisCargas();
+            if (tab === 'planilla') cargarPlanillaRepositor(repositorIdGlobal);
         }
 
         async function cargarMisCargas() {
@@ -249,25 +307,27 @@
             const usuarioLogueado = document.getElementById('registradoPorInput').value;
 
             const { data: lotes, error } = await supabaseClient
-                .from('lotes_vencimientos')
-                .select('*, productos(descripcion)')
-                .eq('creado_por', usuarioLogueado)
+                .from('vencimientos')
+                .select('*')
+                .eq('tienda_id', tiendaIdGlobal)
                 .order('created_at', { ascending: false });
+
+            const lotesFiltrados = lotes ? lotes.filter(l => l.registrado_por && l.registrado_por.includes(usuarioLogueado)) : [];
 
             if (error) {
                 container.innerHTML = `<div style="color: #ef4444; text-align: center; padding: 20px;">Error al cargar productos: ${error.message}</div>`;
                 return;
             }
 
-            document.getElementById('cantCargasCount').textContent = lotes.length;
+            document.getElementById('cantCargasCount').textContent = lotesFiltrados.length;
 
-            if (lotes.length === 0) {
+            if (lotesFiltrados.length === 0) {
                 container.innerHTML = `<div style="text-align: center; color: #9ca3af; padding: 30px;">Aún no registraste productos en este turno.</div>`;
                 return;
             }
 
-            container.innerHTML = lotes.map(lote => {
-                const desc = lote.productos ? lote.productos.descripcion : 'Producto en catálogo';
+            container.innerHTML = lotesFiltrados.map(lote => {
+                const desc = lote.nombre_producto || 'Sin descripción';
                 const fechaVto = lote.fecha_vencimiento ? lote.fecha_vencimiento.split('-').reverse().join('/') : 'Sin fecha';
                 
                 return `
@@ -275,17 +335,16 @@
                         <div class="lote-card-header">
                             <div>
                                 <div class="lote-desc">${desc}</div>
-                                <div class="lote-ean">EAN: ${lote.codigo_ean}</div>
+                                <div class="lote-ean">EAN: ${lote.codigo_barras || lote.codigo_ean}</div>
                             </div>
                             <div class="lote-badge-vto">Vto: ${fechaVto}</div>
                         </div>
                         <div class="lote-card-body">
-                            <span>Unidades: <strong>${lote.cantidad_unidades}</strong></span>
+                            <span>Unidades: <strong>${lote.cantidad || lote.cantidad_unidades}</strong></span>
                             <span>Acción: <strong>${lote.accion_realizada}</strong></span>
                         </div>
                         <div class="lote-card-actions">
                             <button class="btn-card-action" onclick="abrirModalBitacora('${lote.id}')">📝 Notas</button>
-                            <button class="btn-card-action" style="background-color: #0369a1;" onclick="abrirEditarLote('${lote.id}', '${lote.codigo_ean}', '${lote.fecha_vencimiento}', ${lote.cantidad_unidades}, '${lote.accion_realizada}')">✏️ Editar</button>
                             <button class="btn-card-action" style="background-color: #991b1b;" onclick="eliminarLote('${lote.id}')">🗑️ Borrar</button>
                             ${lote.foto_url ? `<a href="${lote.foto_url}" target="_blank" class="btn-card-action" style="text-decoration:none;">🖼️ Foto</a>` : ''}
                         </div>
@@ -294,19 +353,127 @@
             }).join('');
         }
 
-        function abrirEditarLote(id, ean, fecha, unidades, accion) {
-            loteEditandoId = id;
-            document.getElementById('eanInput').value = ean;
-            document.getElementById('fechaVtoInput').value = fecha;
-            document.getElementById('unidadesInput').value = unidades;
-            selectedAccionValue = accion;
-            document.getElementById('selectedAccionText').textContent = accion;
-            buscarDescripcionPorEan();
-            cambiarTab('form');
-            const btnSave = document.querySelector('.btn-save');
-            if (btnSave) btnSave.textContent = "Update ✓";
+        // --- PLANILLA ASIGNADA ---
+        async function cargarPlanillaRepositor() {
+    const contenedor = document.getElementById('listaPlanillaRepositor');
+    const sesion = JSON.parse(localStorage.getItem('sesion_actual') || '{}');
+    
+    const repoId = sesion.id;
+    const repoDni = sesion.dni;
+
+    if (!repoId && !repoDni) {
+        contenedor.innerHTML = `<div style="text-align: center; color: #9ca3af; padding: 30px;">No se identificó la sesión del usuario.</div>`;
+        return;
+    }
+
+    let query = supabaseClient.from('planillas_vencimientos').select('*');
+    if (repoId) {
+        query = query.eq('repositor_id', repoId);
+    } else {
+        query = query.eq('repositor_id', repoDni);
+    }
+
+    const { data, error } = await query
+        .order('estado', { ascending: true })
+        .order('fecha_vencimiento', { ascending: true });
+
+    if (error || !data || data.length === 0) {
+        contenedor.innerHTML = `<div style="text-align: center; color: #9ca3af; padding: 30px; background: #111827; border-radius: 12px; border: 1px dashed #374151; margin-top: 10px;">No tenés ninguna planilla asignada por el momento.</div>`;
+        return;
+    }
+
+    contenedor.innerHTML = data.map(item => {
+        const esRevisado = item.estado === 'REVISADO';
+        const fechaVtoFormateada = item.fecha_vencimiento ? item.fecha_vencimiento.split('-').reverse().join('/') : '-';
+
+        return `
+            <div onclick="abrirModalRevisionItem('${item.id}', '${item.codigo_ean}', '${item.descripcion.replace(/'/g, "\\'")}', '${item.stock_sistema}', '${item.fecha_vencimiento}')" 
+                style="background: #111827; border: 2px solid ${esRevisado ? '#059669' : '#374151'}; border-radius: 12px; padding: 16px; margin-bottom: 14px; cursor: pointer; transition: all 0.2s ease; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.3);"
+                onmouseover="this.style.borderColor='#fbbf24'; this.style.transform='translateY(-2px)';"
+                onmouseout="this.style.borderColor='${esRevisado ? '#059669' : '#374151'}'; this.style.transform='translateY(0)';">
+                
+                <!-- Cabecera de la Tarjeta -->
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+                    <span style="font-size: 10px; font-weight: 800; padding: 4px 10px; border-radius: 20px; background: ${esRevisado ? 'rgba(5, 150, 105, 0.2)' : 'rgba(245, 158, 11, 0.2)'}; color: ${esRevisado ? '#34d399' : '#fbbf24'}; border: 1px solid ${esRevisado ? '#059669' : '#f59e0b'};">
+                        ${esRevisado ? '✔ REVISADO' : '⏳ PENDIENTE DE REVISIÓN'}
+                    </span>
+                    <span style="font-size: 12px; color: #9ca3af; font-family: monospace;">Sec: ${item.sector || 'Gen'}</span>
+                </div>
+
+                <!-- Nombre del Producto -->
+                <div style="font-size: 15px; font-weight: 700; color: #f3f4f6; margin-bottom: 8px; line-height: 1.4;">
+                    ${item.descripcion}
+                </div>
+
+                <!-- Detalles (EAN, Vto, Stock) -->
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px; background: #0b0f19; padding: 10px; border-radius: 8px; font-size: 12px; margin-bottom: 10px;">
+                    <div>
+                        <span style="color: #9ca3af; display: block; font-size: 10px; text-transform: uppercase;">EAN:</span>
+                        <strong style="color: #d1d5db; font-family: monospace;">${item.codigo_ean}</strong>
+                    </div>
+                    <div>
+                        <span style="color: #9ca3af; display: block; font-size: 10px; text-transform: uppercase;">Vencimiento:</span>
+                        <strong style="color: #f87171; font-family: monospace;">${fechaVtoFormateada}</strong>
+                    </div>
+                    <div style="grid-column: span 2; border-top: 1px solid #1f2937; padding-top: 6px; margin-top: 2px; display: flex; justify-content: space-between;">
+                        <span style="color: #9ca3af;">Stock en Sistema:</span>
+                        <strong style="color: #fbbf24; font-size: 13px;">${item.stock_sistema} unidades</strong>
+                    </div>
+                </div>
+
+                ${item.observacion_repositor ? `
+                    <div style="font-size: 12px; background: rgba(31, 41, 55, 0.8); padding: 8px 12px; border-radius: 6px; color: #d1d5db; margin-bottom: 10px; border-left: 3px solid #fbbf24;">
+                        💬 <strong>Tu nota:</strong> ${item.observacion_repositor} ${item.cantidad_real ? `(Cant. real: ${item.cantidad_real} u.)` : ''}
+                    </div>
+                ` : ''}
+
+                <!-- Botón de acción táctil -->
+                <div style="text-align: center; background: ${esRevisado ? '#064e3b' : '#1e3a8a'}; color: white; padding: 10px; border-radius: 8px; font-size: 12px; font-weight: bold; letter-spacing: 0.5px; text-transform: uppercase;">
+                    ${esRevisado ? '✏️ Tocar para editar revisión' : '👆 Tocar para revisar y cargar stock'}
+                </div>
+            </div>
+        `;
+    }).join('');
+}
+
+        function abrirModalRevisionItem(id, ean, desc, stock, vto) {
+            itemPlanillaSeleccionadoId = id;
+            document.getElementById('modalRevDesc').textContent = desc;
+            document.getElementById('modalRevInfo').textContent = `EAN: ${ean} | Stock Sist: ${stock} | Vto: ${vto}`;
+            document.getElementById('inputCantRealRevision').value = '';
+            document.getElementById('inputNotaRevision').value = '';
+            document.getElementById('modalRevisionPlanilla').style.display = 'flex';
         }
 
+        function cerrarModalRevision() {
+            document.getElementById('modalRevisionPlanilla').style.display = 'none';
+            itemPlanillaSeleccionadoId = null;
+        }
+
+        async function guardarRevisionItemActual() {
+            const nota = document.getElementById('inputNotaRevision').value.trim();
+            const cantReal = document.getElementById('inputCantRealRevision').value;
+
+            const { error } = await supabaseClient
+                .from('planillas_vencimientos')
+                .update({
+                    estado: 'REVISADO',
+                    observacion_repositor: nota || 'Revisado sin observaciones',
+                    cantidad_real: cantReal ? parseFloat(cantReal) : null,
+                    fecha_revision: new Date().toISOString()
+                })
+                .eq('id', itemPlanillaSeleccionadoId);
+
+            if (error) {
+                alert('Error al guardar revisión: ' + error.message);
+            } else {
+                alert('¡Producto marcado como revisado con éxito!');
+                cerrarModalRevision();
+                cargarPlanillaRepositor(repositorIdGlobal);
+            }
+        }
+
+        // --- BITÁCORA ---
         async function abrirModalBitacora(loteId) {
             loteSeleccionadoBitacoraId = loteId;
             document.getElementById('modalBitacora').style.display = 'flex';
@@ -316,7 +483,7 @@
             container.innerHTML = 'Cargando historial...';
 
             const { data: lote } = await supabaseClient
-                .from('lotes_vencimientos')
+                .from('vencimientos')
                 .select('bitacora_observaciones')
                 .eq('id', loteId)
                 .single();
@@ -353,7 +520,7 @@
             }
 
             const { data: lote } = await supabaseClient
-                .from('lotes_vencimientos')
+                .from('vencimientos')
                 .select('bitacora_observaciones')
                 .eq('id', loteSeleccionadoBitacoraId)
                 .single();
@@ -365,7 +532,7 @@
             bitacora.push({ fechaHora: fechaHoraStr, autor: usuarioLogueado, nota: nota });
 
             const { error } = await supabaseClient
-                .from('lotes_vencimientos')
+                .from('vencimientos')
                 .update({ bitacora_observaciones: bitacora })
                 .eq('id', loteSeleccionadoBitacoraId);
 
@@ -399,15 +566,28 @@
             const descInput = document.getElementById('descInput');
             if (!eanInput) return;
 
-            const { data: productos } = await supabaseClient.from('productos').select('descripcion').eq('codigo_ean', eanInput);
+            const { data: productos } = await supabaseClient
+                .from('productos')
+                .select('descripcion, sector, seccion, grupo, familia, subfamilia')
+                .eq('codigo_ean', eanInput)
+                .limit(1);
+
             if (productos && productos.length > 0) {
-                descInput.value = productos[0].descripcion;
+                const p = productos[0];
+                descInput.value = p.descripcion;
+                productoActualInfo = {
+                    sector: p.sector || 'VARIOS',
+                    seccion: p.seccion || 'GENERAL',
+                    grupo: p.grupo || null,
+                    familia: p.familia || null,
+                    subfamilia: p.subfamilia || null
+                };
             } else {
-                alert(`El EAN ${eanInput} no se encuentra en el catálogo.`);
-                descInput.value = '';
+                descInput.value = 'PRODUCTO NUEVO / MANUAL';
+                productoActualInfo = { sector: 'VARIOS', seccion: 'GENERAL', grupo: null, familia: null, subfamilia: null };
             }
         }
-
+        
         async function guardarRegistro() {
             if (!tiendaIdGlobal) {
                 alert('Espera un momento a que termine de cargar la sucursal.');
@@ -415,6 +595,7 @@
             }
 
             const ean = document.getElementById('eanInput').value.trim();
+            const descripcionProd = document.getElementById('descInput').value.trim();
             const fechaInputRaw = document.getElementById('fechaVtoInput').value;
             const unidades = parseInt(document.getElementById('unidadesInput').value) || 1;
             const usuarioLogueado = document.getElementById('registradoPorInput').value;
@@ -423,12 +604,6 @@
             if (!ean || !fechaInputRaw) {
                 alert('Completá los campos obligatorios (*). Falta el EAN o la Fecha de Vto.');
                 return;
-            }
-
-            let fecha = fechaInputRaw;
-            if (fecha.includes('/')) {
-                const partes = fecha.split('/');
-                if (partes.length === 3) fecha = `${partes[2]}-${partes[1]}-${partes[0]}`;
             }
 
             let fotoUrl = null;
@@ -441,38 +616,30 @@
                 }
             }
 
-            let productoId = null;
-            const { data: prods } = await supabaseClient.from('productos').select('id').eq('codigo_ean', ean).limit(1);
-            if (prods && prods.length > 0) productoId = prods[0].id;
-
             const ahora = new Date();
             const fechaHoraStr = ahora.toLocaleString('es-AR', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' });
-            const fechaFormateada = fecha.split('-').reverse().join('/');
 
-            let resultado;
-            if (loteEditandoId) {
-                const { data: loteActual } = await supabaseClient.from('lotes_vencimientos').select('bitacora_observaciones').eq('id', loteEditandoId).single();
-                let bitacora = loteActual && loteActual.bitacora_observaciones ? loteActual.bitacora_observaciones : [];
-                bitacora.push({ fechaHora: fechaHoraStr, autor: usuarioLogueado, nota: `Registro editado: ${unidades} unidades, Vto: ${fechaFormateada}` });
-
-                resultado = await supabaseClient.from('lotes_vencimientos').update({
-                    producto_id: productoId, codigo_ean: ean, fecha_vencimiento: fecha,
-                    cantidad_unidades: unidades, accion_realizada: selectedAccionValue,
-                    bitacora_observaciones: bitacora, ...(fotoUrl && { foto_url: fotoUrl })
-                }).eq('id', loteEditandoId);
-            } else {
-                resultado = await supabaseClient.from('lotes_vencimientos').insert([{
-                    tienda_id: tiendaIdGlobal, producto_id: productoId, codigo_ean: ean,
-                    fecha_vencimiento: fecha, cantidad_unidades: unidades, accion_realizada: selectedAccionValue,
-                    creado_por: usuarioLogueado, foto_url: fotoUrl,
-                    bitacora_observaciones: [{ fechaHora: fechaHoraStr, autor: usuarioLogueado, nota: `Registro inicial: ${unidades} unidades` }]
-                }]);
-            }
+            const resultado = await supabaseClient.from('vencimientos').insert([{
+                tienda_id: tiendaIdGlobal, 
+                codigo_barras: ean,
+                nombre_producto: descripcionProd,
+                fecha_vencimiento: fechaInputRaw, 
+                cantidad: unidades, 
+                accion_realizada: selectedAccionValue,
+                registrado_por: usuarioLogueado, 
+                foto_url: fotoUrl,
+                sector: productoActualInfo.sector,
+                seccion: productoActualInfo.seccion,
+                grupo: productoActualInfo.grupo,
+                familia: productoActualInfo.familia,
+                subfamilia: productoActualInfo.subfamilia,
+                bitacora_observaciones: [{ fechaHora: fechaHoraStr, autor: usuarioLogueado, nota: `Registro inicial: ${unidades} unidades` }]
+            }]);
 
             if (resultado.error) {
                 alert('Error en Supabase: ' + resultado.error.message);
             } else {
-                alert(loteEditandoId ? '¡Registro actualizado con éxito!' : '¡Registro guardado con éxito!');
+                alert('¡Registro guardado con éxito!');
                 limpiarFormulario();
                 cambiarTab('cargas');
             }
@@ -480,7 +647,7 @@
 
         async function eliminarLote(id) {
             if (!confirm('¿Estás seguro de que deseas eliminar este registro?')) return;
-            const { error } = await supabaseClient.from('lotes_vencimientos').delete().eq('id', id);
+            const { error } = await supabaseClient.from('vencimientos').delete().eq('id', id);
             if (error) alert('Error al eliminar: ' + error.message);
             else cargarMisCargas();
         }
@@ -494,21 +661,21 @@
             selectedAccionValue = "SIN ACCIONAR";
             document.getElementById('fotoLoteRepo').value = '';
             document.getElementById('textoArchivoSeleccionado').textContent = 'Ningún archivo seleccionado';
-            loteEditandoId = null;
-            const btnSave = document.querySelector('.btn-save');
-            if (btnSave) btnSave.textContent = "Save ✓";
         }
 
         function abrirModalAcciones() { document.getElementById('modalAcciones').style.display = 'flex'; }
         function cerrarModalAcciones() { document.getElementById('modalAcciones').style.display = 'none'; }
+        
         function renderAcciones(opciones) {
             const container = document.getElementById('accionesList');
             container.innerHTML = opciones.map(acc => `<div style="padding: 10px 0; border-bottom: 1px solid #1f2937; cursor: pointer;" onclick="seleccionarAccion('${acc}')">${acc}</div>`).join('');
         }
+        
         function filtrarAcciones() {
             const q = document.getElementById('searchAccion').value.toLowerCase();
             renderAcciones(listaAcciones.filter(a => a.toLowerCase().includes(q)));
         }
+        
         function seleccionarAccion(val) {
             selectedAccionValue = val;
             document.getElementById('selectedAccionText').textContent = val;
@@ -524,9 +691,13 @@
                 buscarDescripcionPorEan();
             }).catch(() => cerrarCamaraScanner());
         }
+
         function cerrarCamaraScanner() {
-            if (html5QrCode) html5QrCode.stop().then(() => document.getElementById('scannerModal').style.display = 'none');
-            else document.getElementById('scannerModal').style.display = 'none';
+            if (html5QrCode) {
+                html5QrCode.stop().then(() => document.getElementById('scannerModal').style.display = 'none').catch(() => document.getElementById('scannerModal').style.display = 'none');
+            } else {
+                document.getElementById('scannerModal').style.display = 'none';
+            }
         }
 
         async function abrirCamaraDirecta() {
@@ -535,10 +706,12 @@
             streamCamara = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' } });
             document.getElementById('videoCamara').srcObject = streamCamara;
         }
+
         function cerrarCamaraDirecta() {
             document.getElementById('modalCamara').style.display = 'none';
             if (streamCamara) streamCamara.getTracks().forEach(t => t.stop());
         }
+
         function sacarFotoModal() {
             const video = document.getElementById('videoCamara');
             const canvas = document.getElementById('canvasCamara');
