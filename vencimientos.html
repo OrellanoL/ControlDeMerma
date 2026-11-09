@@ -101,7 +101,7 @@
 
         <div class="field-group">
             <div class="field-label">Descripcion <span class="required">*</span></div>
-            <input type="text" id="descInput" class="form-input" placeholder="Descripción o detalle del producto" readonly>
+            <input type="text" id="descInput" class="form-input" placeholder="Descripción o detalle del producto">
         </div>
 
         <div class="field-group">
@@ -152,15 +152,33 @@
             <div style="text-align: center; color: #9ca3af; padding: 30px;">Cargando tus registros...</div>
         </div>
     </div>
-
-    <!-- SECCIÓN 3: PLANILLA ASIGNADA POR EL ADMIN -->
+<!-- SECCIÓN 3: PLANILLAS ASIGNADAS (VISTA AGRUPADA) -->
     <div id="tabPlanillaContent" class="tab-content">
-        <div class="form-section-title">Planilla Asignada</div>
-        <div class="form-section-subtitle">Toca un producto para revisar stock y dejar notas</div>
-        <div id="listaPlanillaRepositor">
-            <div style="text-align: center; color: #9ca3af; padding: 30px;">Cargando planilla asignada...</div>
+        <!-- VISTA NVEL 1: LISTADO DE PLANILLAS -->
+        <div id="vistaListaPlanillasPadre">
+            <div class="form-section-title">Mis Planillas Asignadas</div>
+            <div class="form-section-subtitle">Seleccioná una planilla para comenzar a revisar los productos</div>
+            <div id="listaCarpetasPlanillas">
+                <div style="text-align: center; color: #9ca3af; padding: 30px;">Cargando planillas asignadas...</div>
+            </div>
+        </div>
+
+        <!-- VISTA NIVEL 2: DETALLE DE PRODUCTOS DE LA PLANILLA SELECCIONADA -->
+        <div id="vistaDetallePlanillaHijo" style="display: none;">
+            <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 16px;">
+                <button onclick="volverAListaPlanillas()" style="background: #1f2937; color: #fbbf24; border: 1px solid #374151; padding: 8px 14px; border-radius: 8px; font-weight: bold; font-size: 13px; cursor: pointer;">
+                    ← Volver a Planillas
+                </button>
+                <span id="tituloPlanillaSeleccionada" style="font-size: 12px; color: #9ca3af; font-family: monospace;"></span>
+            </div>
+            
+            <div class="form-section-title" id="lblDetallePlanillaTitulo">Productos de la Planilla</div>
+            <div class="form-section-subtitle">Tocá un producto para revisar stock y dejar notas</div>
+            
+            <div id="listaProductosPlanillaSeleccionada"></div>
         </div>
     </div>
+   
 
     <!-- BARRA INFERIOR DE GUARDAR -->
     <div class="bottom-bar" id="bottomBarSave">
@@ -255,7 +273,7 @@
         let streamCamara = null;
         let loteSeleccionadoBitacoraId = null;
         let itemPlanillaSeleccionadoId = null;
-        let productoActualInfo = { sector: null, seccion: null, grupo:null, familia: null, subfamilia: null };
+        let productoActualInfo = { sector: null, seccion: null, grupo:null, familia: null, subfamilia: null, fueraDeCatalogo: false };
 
         const listaAcciones = [
             "SIN ACCIONAR", "Cargado en FORMULARIO P.A.S", "Cargado en ULTIMA MILLA",
@@ -266,14 +284,12 @@
         async function init() {
             const sesion = JSON.parse(localStorage.getItem('sesion_actual') || '{}');
 
-            // Verificamos de forma flexible que exista al menos el DNI o el ID
             if (!sesion.dni && !sesion.id) {
                 alert("No hay una sesión activa. Por favor, iniciá sesión nuevamente.");
                 window.location.href = 'login.html';
                 return;
             }
 
-            // Asignamos los identificadores contemplando ambas estructuras
             tiendaIdGlobal = sesion.id_tienda || sesion.tienda_id;
             repositorIdGlobal = sesion.id || sesion.dni; 
             const nombreRepositor = sesion.nombre || 'Repositor';
@@ -353,88 +369,170 @@
             }).join('');
         }
 
-        // --- PLANILLA ASIGNADA ---
+        let planillasAgrupadasGlobal = {};
+        let loteAsignacionSeleccionado = null;
+
+        // --- PLANILLAS ASIGNADAS (VISTA DE CARPETAS / MÁSTER) ---
         async function cargarPlanillaRepositor() {
-    const contenedor = document.getElementById('listaPlanillaRepositor');
-    const sesion = JSON.parse(localStorage.getItem('sesion_actual') || '{}');
-    
-    const repoId = sesion.id;
-    const repoDni = sesion.dni;
+            const contenedorListado = document.getElementById('listaCarpetasPlanillas');
+            const sesion = JSON.parse(localStorage.getItem('sesion_actual') || '{}');
+            
+            const repoId = sesion.id;
+            const repoDni = sesion.dni;
 
-    if (!repoId && !repoDni) {
-        contenedor.innerHTML = `<div style="text-align: center; color: #9ca3af; padding: 30px;">No se identificó la sesión del usuario.</div>`;
-        return;
-    }
+            if (!repoId && !repoDni) {
+                contenedorListado.innerHTML = `<div style="text-align: center; color: #9ca3af; padding: 30px;">No se identificó la sesión del usuario.</div>`;
+                return;
+            }
 
-    let query = supabaseClient.from('planillas_vencimientos').select('*');
-    if (repoId) {
-        query = query.eq('repositor_id', repoId);
-    } else {
-        query = query.eq('repositor_id', repoDni);
-    }
+            let query = supabaseClient.from('planillas_vencimientos').select('*');
+            if (repoId) {
+                query = query.eq('repositor_id', repoId);
+            } else {
+                query = query.eq('repositor_id', repoDni);
+            }
 
-    const { data, error } = await query
-        .order('estado', { ascending: true })
-        .order('fecha_vencimiento', { ascending: true });
+            const { data, error } = await query.order('created_at', { ascending: false });
 
-    if (error || !data || data.length === 0) {
-        contenedor.innerHTML = `<div style="text-align: center; color: #9ca3af; padding: 30px; background: #111827; border-radius: 12px; border: 1px dashed #374151; margin-top: 10px;">No tenés ninguna planilla asignada por el momento.</div>`;
-        return;
-    }
+            if (error || !data || data.length === 0) {
+                contenedorListado.innerHTML = `<div style="text-align: center; color: #9ca3af; padding: 30px; background: #111827; border-radius: 12px; border: 1px dashed #374151; margin-top: 10px;">No tenés ninguna planilla asignada por el momento.</div>`;
+                return;
+            }
 
-    contenedor.innerHTML = data.map(item => {
-        const esRevisado = item.estado === 'REVISADO';
-        const fechaVtoFormateada = item.fecha_vencimiento ? item.fecha_vencimiento.split('-').reverse().join('/') : '-';
+            // Agrupamos las filas por fecha/hora de asignación exacta (created_at)
+            planillasAgrupadasGlobal = {};
 
-        return `
-            <div onclick="abrirModalRevisionItem('${item.id}', '${item.codigo_ean}', '${item.descripcion.replace(/'/g, "\\'")}', '${item.stock_sistema}', '${item.fecha_vencimiento}')" 
-                style="background: #111827; border: 2px solid ${esRevisado ? '#059669' : '#374151'}; border-radius: 12px; padding: 16px; margin-bottom: 14px; cursor: pointer; transition: all 0.2s ease; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.3);"
-                onmouseover="this.style.borderColor='#fbbf24'; this.style.transform='translateY(-2px)';"
-                onmouseout="this.style.borderColor='${esRevisado ? '#059669' : '#374151'}'; this.style.transform='translateY(0)';">
-                
-                <!-- Cabecera de la Tarjeta -->
-                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
-                    <span style="font-size: 10px; font-weight: 800; padding: 4px 10px; border-radius: 20px; background: ${esRevisado ? 'rgba(5, 150, 105, 0.2)' : 'rgba(245, 158, 11, 0.2)'}; color: ${esRevisado ? '#34d399' : '#fbbf24'}; border: 1px solid ${esRevisado ? '#059669' : '#f59e0b'};">
-                        ${esRevisado ? '✔ REVISADO' : '⏳ PENDIENTE DE REVISIÓN'}
-                    </span>
-                    <span style="font-size: 12px; color: #9ca3af; font-family: monospace;">Sec: ${item.sector || 'Gen'}</span>
-                </div>
+            data.forEach(item => {
+                let fechaClave = 'Asignación Sin Fecha';
+                if (item.created_at) {
+                    const d = new Date(item.created_at);
+                    fechaClave = d.toLocaleString('es-AR', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' });
+                } else if (item.fecha_vencimiento) {
+                    fechaClave = `Carga ${item.fecha_vencimiento}`;
+                }
 
-                <!-- Nombre del Producto -->
-                <div style="font-size: 15px; font-weight: 700; color: #f3f4f6; margin-bottom: 8px; line-height: 1.4;">
-                    ${item.descripcion}
-                </div>
+                if (!planillasAgrupadasGlobal[fechaClave]) {
+                    planillasAgrupadasGlobal[fechaClave] = [];
+                }
+                planillasAgrupadasGlobal[fechaClave].push(item);
+            });
 
-                <!-- Detalles (EAN, Vto, Stock) -->
-                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px; background: #0b0f19; padding: 10px; border-radius: 8px; font-size: 12px; margin-bottom: 10px;">
-                    <div>
-                        <span style="color: #9ca3af; display: block; font-size: 10px; text-transform: uppercase;">EAN:</span>
-                        <strong style="color: #d1d5db; font-family: monospace;">${item.codigo_ean}</strong>
+            // Renderizamos las tarjetas de las planillas
+            const llavesPlanillas = Object.keys(planillasAgrupadasGlobal);
+
+            contenedorListado.innerHTML = llavesPlanillas.map((clave, index) => {
+                const productos = planillasAgrupadasGlobal[clave];
+                const totalProds = productos.length;
+                const revisados = productos.filter(p => p.estado === 'REVISADO').length;
+                const porcentaje = Math.round((revisados / totalProds) * 100);
+                const completado = revisados === totalProds;
+
+                return `
+                    <div onclick="abrirDetallePlanilla('${clave}')" 
+                        style="background: #111827; border: 2px solid ${completado ? '#059669' : '#374151'}; border-radius: 12px; padding: 18px; margin-bottom: 14px; cursor: pointer; transition: all 0.2s ease; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.3);"
+                        onmouseover="this.style.borderColor='#fbbf24'; this.style.transform='translateY(-2px)';"
+                        onmouseout="this.style.borderColor='${completado ? '#059669' : '#374151'}'; this.style.transform='translateY(0)';">
+                        
+                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
+                            <span style="font-size: 13px; font-weight: 800; color: #fbbf24; text-transform: uppercase; letter-spacing: 0.5px;">
+                                📋 Planilla Asignada #${llavesPlanillas.length - index}
+                            </span>
+                            <span style="font-size: 10px; font-weight: 800; padding: 4px 10px; border-radius: 20px; background: ${completado ? 'rgba(5, 150, 105, 0.2)' : 'rgba(245, 158, 11, 0.2)'}; color: ${completado ? '#34d399' : '#fbbf24'}; border: 1px solid ${completado ? '#059669' : '#f59e0b'};">
+                                ${completado ? '✔ COMPLETADA' : `${revisados}/${totalProds} REVISADOS (${porcentaje}%)`}
+                            </span>
+                        </div>
+
+                        <div style="font-size: 14px; font-weight: 700; color: #f3f4f6; margin-bottom: 6px;">
+                            📅 Asignada el: ${clave} hs
+                        </div>
+
+                        <div style="font-size: 12px; color: #9ca3af; margin-bottom: 12px;">
+                            📦 Contiene <strong>${totalProds} productos</strong> para auditar vencimiento.
+                        </div>
+
+                        <!-- Barra de Progreso -->
+                        <div style="width: 100%; background: #1f2937; height: 8px; border-radius: 4px; overflow: hidden; margin-bottom: 14px;">
+                            <div style="width: ${porcentaje}%; background: ${completado ? '#10b981' : '#f59e0b'}; height: 100%; transition: width 0.3s ease;"></div>
+                        </div>
+
+                        <div style="text-align: center; background: ${completado ? '#064e3b' : '#1e3a8a'}; color: white; padding: 10px; border-radius: 8px; font-size: 12px; font-weight: bold; letter-spacing: 0.5px; text-transform: uppercase;">
+                            📂 Tocar para abrir y revisar productos
+                        </div>
                     </div>
-                    <div>
-                        <span style="color: #9ca3af; display: block; font-size: 10px; text-transform: uppercase;">Vencimiento:</span>
-                        <strong style="color: #f87171; font-family: monospace;">${fechaVtoFormateada}</strong>
-                    </div>
-                    <div style="grid-column: span 2; border-top: 1px solid #1f2937; padding-top: 6px; margin-top: 2px; display: flex; justify-content: space-between;">
-                        <span style="color: #9ca3af;">Stock en Sistema:</span>
-                        <strong style="color: #fbbf24; font-size: 13px;">${item.stock_sistema} unidades</strong>
-                    </div>
-                </div>
+                `;
+            }).join('');
+        }
 
-                ${item.observacion_repositor ? `
-                    <div style="font-size: 12px; background: rgba(31, 41, 55, 0.8); padding: 8px 12px; border-radius: 6px; color: #d1d5db; margin-bottom: 10px; border-left: 3px solid #fbbf24;">
-                        💬 <strong>Tu nota:</strong> ${item.observacion_repositor} ${item.cantidad_real ? `(Cant. real: ${item.cantidad_real} u.)` : ''}
-                    </div>
-                ` : ''}
+        // --- VISTA DETALLE DE PRODUCTOS DE UNA PLANILLA ---
+        function abrirDetallePlanilla(claveFecha) {
+            loteAsignacionSeleccionado = claveFecha;
+            const productos = planillasAgrupadasGlobal[claveFecha] || [];
 
-                <!-- Botón de acción táctil -->
-                <div style="text-align: center; background: ${esRevisado ? '#064e3b' : '#1e3a8a'}; color: white; padding: 10px; border-radius: 8px; font-size: 12px; font-weight: bold; letter-spacing: 0.5px; text-transform: uppercase;">
-                    ${esRevisado ? '✏️ Tocar para editar revisión' : '👆 Tocar para revisar y cargar stock'}
-                </div>
-            </div>
-        `;
-    }).join('');
-}
+            document.getElementById('vistaListaPlanillasPadre').style.display = 'none';
+            document.getElementById('vistaDetallePlanillaHijo').style.display = 'block';
+
+            document.getElementById('tituloPlanillaSeleccionada').textContent = `Planilla: ${claveFecha}`;
+            document.getElementById('lblDetallePlanillaTitulo').textContent = `Productos (${productos.length})`;
+
+            const contenedorProductos = document.getElementById('listaProductosPlanillaSeleccionada');
+
+            contenedorProductos.innerHTML = productos.map(item => {
+                const esRevisado = item.estado === 'REVISADO';
+                const fechaVtoFormateada = item.fecha_vencimiento ? item.fecha_vencimiento.split('-').reverse().join('/') : '-';
+                const descSegura = (item.descripcion || '').replace(/'/g, "\\'").replace(/"/g, '&quot;');
+
+                return `
+                    <div style="background: #111827; border: 2px solid ${esRevisado ? '#059669' : '#374151'}; border-radius: 12px; padding: 16px; margin-bottom: 14px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.3);">
+                        
+                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+                            <span style="font-size: 10px; font-weight: 800; padding: 4px 10px; border-radius: 20px; background: ${esRevisado ? 'rgba(5, 150, 105, 0.2)' : 'rgba(245, 158, 11, 0.2)'}; color: ${esRevisado ? '#34d399' : '#fbbf24'}; border: 1px solid ${esRevisado ? '#059669' : '#f59e0b'};">
+                                ${esRevisado ? '✔ REVISADO' : '⏳ PENDIENTE DE REVISIÓN'}
+                            </span>
+                            <span style="font-size: 12px; color: #9ca3af; font-family: monospace;">Sec: ${item.sector || 'Gen'}</span>
+                        </div>
+
+                        <div style="font-size: 15px; font-weight: 700; color: #f3f4f6; margin-bottom: 8px; line-height: 1.4;">
+                            ${item.descripcion}
+                        </div>
+
+                        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px; background: #0b0f19; padding: 10px; border-radius: 8px; font-size: 12px; margin-bottom: 10px;">
+                            <div>
+                                <span style="color: #9ca3af; display: block; font-size: 10px; text-transform: uppercase;">EAN:</span>
+                                <strong style="color: #d1d5db; font-family: monospace;">${item.codigo_ean}</strong>
+                            </div>
+                            <div>
+                                <span style="color: #9ca3af; display: block; font-size: 10px; text-transform: uppercase;">Vencimiento:</span>
+                                <strong style="color: #f87171; font-family: monospace;">${fechaVtoFormateada}</strong>
+                            </div>
+                            <div style="grid-column: span 2; border-top: 1px solid #1f2937; padding-top: 6px; margin-top: 2px; display: flex; justify-content: space-between;">
+                                <span style="color: #9ca3af;">Stock en Sistema:</span>
+                                <strong style="color: #fbbf24; font-size: 13px;">${item.stock_sistema} unidades</strong>
+                            </div>
+                        </div>
+
+                        ${item.observacion_repositor ? `
+                            <div style="font-size: 12px; background: rgba(31, 41, 55, 0.8); padding: 8px 12px; border-radius: 6px; color: #d1d5db; margin-bottom: 10px; border-left: 3px solid #fbbf24;">
+                                💬 <strong>Tu nota:</strong> ${item.observacion_repositor} ${item.cantidad_real ? `(Cant. real: ${item.cantidad_real} u.)` : ''}
+                            </div>
+                        ` : ''}
+
+                        <!-- Botón interactivo conectado al modal de revisión -->
+                        <button onclick="abrirModalRevisionItem('${item.id}', '${item.codigo_ean}', '${descSegura}', '${item.stock_sistema}', '${item.fecha_vencimiento}')" 
+                            style="width: 100%; text-align: center; background: ${esRevisado ? '#064e3b' : '#1e3a8a'}; color: white; padding: 12px; border: none; border-radius: 8px; font-size: 12px; font-weight: bold; letter-spacing: 0.5px; text-transform: uppercase; cursor: pointer; transition: opacity 0.2s;"
+                            onmouseover="this.style.opacity='0.9'" onmouseout="this.style.opacity='1'">
+                            ${esRevisado ? '✏️ Tocar para editar revisión' : '👆 Tocar para revisar y cargar stock'}
+                        </button>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        function volverAListaPlanillas() {
+            document.getElementById('vistaListaPlanillasPadre').style.display = 'block';
+            document.getElementById('vistaDetallePlanillaHijo').style.display = 'none';
+            loteAsignacionSeleccionado = null;
+            cargarPlanillaRepositor(); 
+        }
 
         function abrirModalRevisionItem(id, ean, desc, stock, vto) {
             itemPlanillaSeleccionadoId = id;
@@ -469,11 +567,16 @@
             } else {
                 alert('¡Producto marcado como revisado con éxito!');
                 cerrarModalRevision();
-                cargarPlanillaRepositor(repositorIdGlobal);
+                
+                // Actualizamos y nos mantenemos dentro de la misma planilla abierta
+                await cargarPlanillaRepositor();
+                if (loteAsignacionSeleccionado) {
+                    abrirDetallePlanilla(loteAsignacionSeleccionado);
+                }
             }
         }
 
-        // --- BITÁCORA ---
+
         async function abrirModalBitacora(loteId) {
             loteSeleccionadoBitacoraId = loteId;
             document.getElementById('modalBitacora').style.display = 'flex';
@@ -561,10 +664,13 @@
             }
         }
 
+        // --- BÚSQUEDA FLEXIBLE DE EAN ---
         async function buscarDescripcionPorEan() {
             const eanInput = document.getElementById('eanInput').value.trim();
             const descInput = document.getElementById('descInput');
             if (!eanInput) return;
+
+            descInput.value = 'Buscando...';
 
             const { data: productos } = await supabaseClient
                 .from('productos')
@@ -575,20 +681,38 @@
             if (productos && productos.length > 0) {
                 const p = productos[0];
                 descInput.value = p.descripcion;
+                descInput.readOnly = true;
+                descInput.style.backgroundColor = '#1f2937';
+                descInput.style.border = '1px solid #374151';
                 productoActualInfo = {
                     sector: p.sector || 'VARIOS',
                     seccion: p.seccion || 'GENERAL',
                     grupo: p.grupo || null,
                     familia: p.familia || null,
-                    subfamilia: p.subfamilia || null
+                    subfamilia: p.subfamilia || null,
+                    fueraDeCatalogo: false
                 };
             } else {
-                descInput.value = 'PRODUCTO NUEVO / MANUAL';
-                productoActualInfo = { sector: 'VARIOS', seccion: 'GENERAL', grupo: null, familia: null, subfamilia: null };
+                // Producto fuera de catálogo: Habilita escritura manual libre
+                descInput.value = '';
+                descInput.readOnly = false;
+                descInput.placeholder = '⚠️ EAN fuera de catálogo. Escriba el nombre aquí...';
+                descInput.style.backgroundColor = '#111827';
+                descInput.style.border = '2px solid #f59e0b';
+                productoActualInfo = { 
+                    sector: 'GENERAL', 
+                    seccion: 'SIN SECCION', 
+                    grupo: null, 
+                    familia: null, 
+                    subfamilia: null,
+                    fueraDeCatalogo: true 
+                };
             }
         }
         
-        async function guardarRegistro() {
+       
+
+           async function guardarRegistro() {
             if (!tiendaIdGlobal) {
                 alert('Espera un momento a que termine de cargar la sucursal.');
                 return;
@@ -601,8 +725,8 @@
             const usuarioLogueado = document.getElementById('registradoPorInput').value;
             const fotoInput = document.getElementById('fotoLoteRepo');
 
-            if (!ean || !fechaInputRaw) {
-                alert('Completá los campos obligatorios (*). Falta el EAN o la Fecha de Vto.');
+            if (!ean || !fechaInputRaw || !descripcionProd) {
+                alert('Completá los campos obligatorios (*). Falta el EAN, la descripción o la Fecha de Vto.');
                 return;
             }
 
@@ -619,6 +743,65 @@
             const ahora = new Date();
             const fechaHoraStr = ahora.toLocaleString('es-AR', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' });
 
+            // 1. Buscamos si ya existe un lote ACTIVO con el mismo EAN y la MISMA fecha de vencimiento en esta tienda
+            const { data: lotesExistentes, error: errorBusqueda } = await supabaseClient
+                .from('vencimientos')
+                .select('*')
+                .eq('tienda_id', tiendaIdGlobal)
+                .eq('codigo_barras', ean)
+                .eq('fecha_vencimiento', fechaInputRaw);
+
+            if (errorBusqueda) {
+                alert('Error al verificar registros existentes: ' + errorBusqueda.message);
+                return;
+            }
+
+            if (lotesExistentes && lotesExistentes.length > 0) {
+                // Ya existe al menos un lote con el mismo EAN y la misma fecha (Opción 2: Acumulación)
+                const loteAnterior = lotesExistentes[0];
+                const cantidadAnterior = loteAnterior.cantidad || loteAnterior.cantidad_unidades || 0;
+                const nuevaCantidadTotal = cantidadAnterior + unidades;
+
+                const confirmarSuma = confirm(
+                    `⚠️ Ya existe un registro de este producto con vencimiento al ${fechaInputRaw.split('-').reverse().join('/')}.\n\n` +
+                    `Cantidad actual en sistema: ${cantidadAnterior} u.\n` +
+                    `Unidades a agregar: ${unidades} u.\n\n` +
+                    `¿Deseas SUMAR estas unidades al lote existente (Aceptar) o crear un registro aparte (Cancelar)?`
+                );
+
+                if (confirmarSuma) {
+                    // Actualizamos sumando stock y agregando nota a la bitácora
+                    let bitacora = Array.isArray(loteAnterior.bitacora_observaciones) ? loteAnterior.bitacora_observaciones : [];
+                    bitacora.push({ 
+                        fechaHora: fechaHoraStr, 
+                        autor: usuarioLogueado, 
+                        nota: `Se sumaron ${unidades} unidades (Total actualizado: ${nuevaCantidadTotal} u.)` 
+                    });
+
+                    const updateData = {
+                        cantidad: nuevaCantidadTotal,
+                        bitacora_observaciones: bitacora
+                    };
+                    if (fotoUrl) updateData.foto_url = fotoUrl; // Si subió nueva foto opcional, la actualizamos
+
+                    const { error: errorUpdate } = await supabaseClient
+                        .from('vencimientos')
+                        .update(updateData)
+                        .eq('id', loteAnterior.id);
+
+                    if (errorUpdate) {
+                        alert('Error al actualizar el stock del lote: ' + errorUpdate.message);
+                        return;
+                    } else {
+                        alert(`¡Stock actualizado con éxito! Nuevo total: ${nuevaCantidadTotal} unidades.`);
+                        limpiarFormulario();
+                        cambiarTab('cargas');
+                        return;
+                    }
+                }
+            }
+
+            // 2. Si no existe o eligió crear un registro aparte (Opción 1: Lote independiente por fecha distinta)
             const resultado = await supabaseClient.from('vencimientos').insert([{
                 tienda_id: tiendaIdGlobal, 
                 codigo_barras: ean,
@@ -639,7 +822,12 @@
             if (resultado.error) {
                 alert('Error en Supabase: ' + resultado.error.message);
             } else {
-                alert('¡Registro guardado con éxito!');
+                if (productoActualInfo.fueraDeCatalogo) {
+                    alert('¡Registro guardado con éxito!\n\n⚠️ RECORDATORIO: Este código EAN no está registrado en el catálogo general. Por favor, avisale al administrador para que dé de alta el producto.');
+                } else {
+                    alert('¡Registro guardado con éxito!');
+                }
+                
                 limpiarFormulario();
                 cambiarTab('cargas');
             }
@@ -654,13 +842,18 @@
 
         function limpiarFormulario() {
             document.getElementById('eanInput').value = '';
-            document.getElementById('descInput').value = '';
+            const descInput = document.getElementById('descInput');
+            descInput.value = '';
+            descInput.readOnly = true;
+            descInput.style.backgroundColor = '#1f2937';
+            descInput.style.border = '1px solid #374151';
             document.getElementById('fechaVtoInput').value = '';
             document.getElementById('unidadesInput').value = '1';
             document.getElementById('selectedAccionText').textContent = 'Seleccionar...';
             selectedAccionValue = "SIN ACCIONAR";
             document.getElementById('fotoLoteRepo').value = '';
             document.getElementById('textoArchivoSeleccionado').textContent = 'Ningún archivo seleccionado';
+            productoActualInfo = { sector: null, seccion: null, grupo: null, familia: null, subfamilia: null, fueraDeCatalogo: false };
         }
 
         function abrirModalAcciones() { document.getElementById('modalAcciones').style.display = 'flex'; }
