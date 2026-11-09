@@ -52,11 +52,20 @@
                     <span class="flex items-center gap-2.5">📦 Catálogo & Alta EAN</span>
                 </button>
 
-                <button onclick="cambiarSeccionAdmin('vencimientos', this)" class="menu-btn w-full flex items-center justify-between px-3.5 py-2.5 rounded-xl text-xs font-bold transition text-slate-300 hover:bg-slate-800 hover:text-white">
-                    <span class="flex items-center gap-2.5">⏱️ Vencimientos</span>
-                    <span id="badgeVtosCount" class="bg-red-600 text-white text-[10px] px-1.5 py-0.5 rounded-full">0</span>
-                </button>
-
+                <!-- Módulo Vencimientos con Submenú de Alertas -->
+    <div class="space-y-1">
+        <button onclick="cambiarSeccionAdmin('vencimientos', this)" class="menu-btn w-full flex items-center justify-between px-3.5 py-2.5 rounded-xl text-xs font-bold text-slate-300 hover:text-white hover:bg-slate-800 transition">
+            <span class="flex items-center gap-2.5">⏱️ Vencimientos</span>
+            <span id="badgeVtosCount" class="bg-red-600 text-white text-[10px] px-1.5 py-0.5 rounded-full">0</span>
+        </button>
+        
+        <!-- Subcategoría de Alertas -->
+        <div class="pl-4 space-y-1 border-l-2 border-red-500 ml-3 mt-1">
+            <button onclick="cambiarSeccionAdmin('alertasVencimientos', this)" class="menu-btn w-full text-left text-xs font-semibold text-red-400 hover:text-red-300 py-1.5 px-2 rounded-lg hover:bg-slate-800 transition flex items-center gap-1.5">
+                🚨 Alertas 
+            </button>
+        </div>
+    </div>
                 <button onclick="cambiarSeccionAdmin('planilla', this)" class="menu-btn w-full flex items-center justify-between px-3.5 py-2.5 rounded-xl text-xs font-bold transition text-slate-300 hover:bg-slate-800 hover:text-white">
                     <span class="flex items-center gap-2.5">📋 Asignar Planilla de Control VTO</span>
                 </button>
@@ -208,6 +217,39 @@
                 </div>
             </div>
 
+            <!-- SECCIÓN: ALERTAS DE VENCIMIENTO (≤ 10 DÍAS) -->
+<div id="seccionAlertasVencimientos" class="seccion-admin space-y-6 hidden">
+    <div class="bg-white rounded-xl shadow-md p-6 border border-slate-200 space-y-4">
+        <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center border-b pb-3 gap-2">
+            <div>
+                <h2 class="text-sm font-bold text-red-600 uppercase tracking-wide flex items-center gap-2">
+                    🚨 Alertas Críticas de Vencimiento
+                </h2>
+                <p class="text-xs text-slate-500 mt-0.5">Artículos próximos a expirar que requieren acción inmediata</p>
+            </div>
+            <span id="contadorAlertasBadge" class="bg-red-100 text-red-800 text-xs font-extrabold px-3 py-1.5 rounded-full border border-red-300">0 productos en alerta</span>
+        </div>
+
+        <div class="overflow-x-auto max-h-[550px] overflow-y-auto border border-slate-200 rounded-lg">
+            <table class="w-full text-left border-collapse text-sm">
+                <thead class="bg-slate-100 text-slate-700 uppercase text-xs tracking-wider sticky top-0">
+                    <tr>
+                        <th class="p-3">EAN / Producto</th>
+                        <th class="p-3">Vencimiento / Urgencia</th>
+                        <th class="p-3 text-center">Cant.</th>
+                        <th class="p-3">Cargado Por</th>
+                        <th class="p-3">Acción</th>
+                        <th class="p-3 text-center">Notes</th>
+                        <th class="p-3 text-center">Acciones</th>
+                    </tr>
+                </thead>
+                <tbody id="tablaAlertasAdmin">
+                    <tr><td colspan="7" class="p-6 text-center text-slate-400">Cargando alertas...</td></tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
             <!-- SECCIÓN 3: VENCIMIENTOS Y BITÁCORA -->
             <div id="seccionVencimientos" class="seccion-admin space-y-6 hidden">
                 <div class="bg-white rounded-xl shadow-md p-6 border border-slate-200 space-y-4">
@@ -364,40 +406,65 @@
                 </div>
             </div>
 
-            <!-- SECCIÓN 5: MONITOREO EN TIEMPO REAL DE PLANILLAS -->
+        <!-- SECCIÓN 5: MONITOREO EN TIEMPO REAL DE PLANILLAS (VISTA POR CARPETAS) -->
             <div id="seccionMonitoreoPlanillas" class="seccion-admin space-y-6 hidden">
                 <div class="bg-white rounded-xl shadow-md p-6 border border-slate-200 space-y-6">
-                    <div class="flex flex-col sm:flex-row justify-between items-center border-b pb-3 gap-3">
-                        <h2 class="text-sm font-bold text-slate-800 uppercase tracking-wide flex items-center gap-2">
-                            <span class="bg-blue-100 text-blue-800 p-1.5 rounded-lg">👁️</span> Seguimiento de Planillas Asignadas
-                        </h2>
-                        <button onclick="cargarMonitoreoPlanillas()" class="bg-slate-900 hover:bg-slate-800 text-white font-bold px-3 py-1.5 rounded-lg text-xs uppercase tracking-wider transition shadow flex items-center gap-1">
-                            🔄 Actualizar Datos
-                        </button>
+                    
+                    <!-- VISTA NIVEL 1: LISTADO DE CARPETAS / PLANILLAS ASIGNADAS -->
+                    <div id="adminVistaListaPlanillasPadre">
+                        <div class="flex flex-col sm:flex-row justify-between items-center border-b pb-3 gap-3">
+                            <h2 class="text-sm font-bold text-slate-800 uppercase tracking-wide flex items-center gap-2">
+                                <span class="bg-blue-100 text-blue-800 p-1.5 rounded-lg">👁️</span> Seguimiento de Planillas Asignadas
+                            </h2>
+                            <button onclick="cargarMonitoreoPlanillas()" class="bg-slate-900 hover:bg-slate-800 text-white font-bold px-3 py-1.5 rounded-lg text-xs uppercase tracking-wider transition shadow flex items-center gap-1">
+                                🔄 Actualizar Datos
+                            </button>
+                        </div>
+                        <div class="mt-4" id="adminContenedorCarpetasPlanillas">
+                            <div class="text-center text-slate-400 py-6">Cargando seguimiento de planillas...</div>
+                        </div>
                     </div>
 
-                    <div class="overflow-x-auto max-h-[500px] overflow-y-auto border border-slate-200 rounded-lg">
-                        <table class="w-full text-left border-collapse text-sm">
-                            <thead class="bg-slate-100 text-slate-700 uppercase text-xs tracking-wider sticky top-0">
-                                <tr>
-                                    <th class="p-3">Repositor</th>
-                                    <th class="p-3">Producto / EAN</th>
-                                    <th class="p-3 text-center">Vto / Stock Sist.</th>
-                                    <th class="p-3 text-center">Estado</th>
-                                    <th class="p-3">Cant. Real & Observación del Repositor</th>
-                                    <th class="p-3 text-center">Acciones</th>
-                                </tr>
-                            </thead>
-                            <tbody id="tablaMonitoreoPlanillas">
-                                <tr><td colspan="6" class="p-4 text-center text-slate-400">Cargando seguimiento...</td></tr>
-                            </tbody>
-                        </table>
+                    <!-- VISTA NIVEL 2: DETALLE DE PRODUCTOS DE LA PLANILLA SELECCIONADA -->
+                    <div id="adminVistaDetallePlanillaHijo" style="display: none;">
+                        <div class="flex items-center justify-between border-b pb-3 mb-4">
+                            <button onclick="adminVolverAListaPlanillas()" class="bg-slate-200 hover:bg-slate-300 text-slate-700 font-bold px-3.5 py-1.5 rounded-lg text-xs uppercase tracking-wider transition shadow flex items-center gap-1">
+                                ← Volver a Planillas
+                            </button>
+                            <span id="adminTituloPlanillaSeleccionada" class="text-xs font-mono font-bold text-slate-500"></span>
+                        </div>
+
+                        <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 mb-3">
+                            <h3 class="text-xs font-bold text-slate-700 uppercase tracking-wider" id="adminLblDetalleTitulo">Detalle de Productos</h3>
+                            
+                            <!-- Botones de Filtro por Estado -->
+                            <div class="flex items-center gap-1.5 bg-slate-100 p-1 rounded-lg border border-slate-200 text-xs font-bold">
+                                <button onclick="filtrarAdminDetalleEstado('TODOS')" id="btnFiltrarTodos" class="px-3 py-1 rounded-md bg-slate-900 text-white transition shadow-sm">Todos</button>
+                                <button onclick="filtrarAdminDetalleEstado('PENDIENTE')" id="btnFiltrarPendiente" class="px-3 py-1 rounded-md text-slate-600 hover:bg-slate-200 transition">Pendientes</button>
+                                <button onclick="filtrarAdminDetalleEstado('REVISADO')" id="btnFiltrarRevisado" class="px-3 py-1 rounded-md text-slate-600 hover:bg-slate-200 transition">Revisados</button>
+                            </div>
+                        </div>
+
+                        <div class="overflow-x-auto max-h-[500px] overflow-y-auto border border-slate-200 rounded-lg">
+                            <table class="w-full text-left border-collapse text-sm">
+                                <thead class="bg-slate-100 text-slate-700 uppercase text-xs tracking-wider sticky top-0">
+                                    <tr>
+                                        <th class="p-3">Producto / EAN</th>
+                                        <th class="p-3 text-center">Vto / Stock Sist.</th>
+                                        <th class="p-3 text-center">Estado</th>
+                                        <th class="p-3">Cant. Real & Observación del Repositor</th>
+                                        <th class="p-3 text-center">Acciones</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="adminTablaMonitoreoDetalle">
+                                    <tr><td colspan="5" class="p-4 text-center text-slate-400">Cargando productos...</td></tr>
+                                </tbody>
+                            </table>
+                        </div>
                     </div>
+
                 </div>
             </div>
-
-        </main>
-    </div>
 
     <!-- ÁREA OCULTA PARA IMPRESIÓN DE REPORTE -->
     <div id="areaImpresionReporte" class="hidden">
@@ -518,6 +585,7 @@
         }
 
         // --- NAVEGACIÓN POR SIDEBAR ---
+       // --- NAVEGACIÓN POR SIDEBAR ---
         function cambiarSeccionAdmin(seccionId, btnElement) {
             document.querySelectorAll('.seccion-admin').forEach(el => el.classList.add('hidden'));
             document.querySelectorAll('.menu-btn').forEach(el => {
@@ -534,6 +602,11 @@
             } else if (seccionId === 'vencimientos') {
                 document.getElementById('seccionVencimientos').classList.remove('hidden');
                 document.getElementById('nombreSeccionActual').textContent = 'Registro de Vencimientos y Bitácora';
+            } else if (seccionId === 'alertasVencimientos') {
+                // Muestra la sección de Alertas de 10 días o menos
+                document.getElementById('seccionAlertasVencimientos').classList.remove('hidden');
+                document.getElementById('nombreSeccionActual').textContent = '🚨 Stock Crítico con Vencimiento Próximo';
+                renderizarTablaAlertas();
             } else if (seccionId === 'planilla') {
                 document.getElementById('seccionPlanilla').classList.remove('hidden');
                 document.getElementById('nombreSeccionActual').textContent = 'Asignación de Planilla Excel';
@@ -544,8 +617,10 @@
                 cargarMonitoreoPlanillas();
             }
 
-            btnElement.classList.remove('text-slate-300', 'hover:bg-slate-800', 'hover:text-white');
-            btnElement.classList.add('bg-blue-700', 'text-white', 'shadow-md');
+            if (btnElement) {
+                btnElement.classList.remove('text-slate-300', 'hover:bg-slate-800', 'hover:text-white');
+                btnElement.classList.add('bg-blue-700', 'text-white', 'shadow-md');
+            }
         }
 
         // --- CARGAR SELECT DE REPOSITORES PARA LA PLANILLA ---
@@ -567,29 +642,201 @@
             `).join('');
         }
 
-        async function cargarMonitoreoPlanillas() {
-            const tbody = document.getElementById('tablaMonitoreoPlanillas');
-            tbody.innerHTML = `<tr><td colspan="6" class="p-4 text-center text-slate-400">Actualizando datos en vivo...</td></tr>`;
+        let adminPlanillasAgrupadasGlobal = {};
+        let adminClavePlanillaSeleccionada = null;
+
+        
+           async function cargarMonitoreoPlanillas() {
+            const contenedorCarpetas = document.getElementById('adminContenedorCarpetasPlanillas');
+            contenedorCarpetas.innerHTML = `<div class="text-center text-slate-400 py-6">Actualizando datos en vivo...</div>`;
 
             const { data, error } = await supabaseClient
                 .from('planillas_vencimientos')
                 .select('*')
                 .eq('tienda_id', tiendaId)
-                .order('estado', { ascending: true })
-                .order('fecha_vencimiento', { ascending: true });
+                .order('created_at', { ascending: false });
 
             if (error || !data || data.length === 0) {
-                tbody.innerHTML = `<tr><td colspan="6" class="p-4 text-center text-slate-400">No hay planillas asignadas o registros para monitorear.</td></tr>`;
+                contenedorCarpetas.innerHTML = `<div class="text-center text-slate-400 py-6 border border-dashed rounded-lg">No hay planillas asignadas o registros para monitorear.</div>`;
                 return;
             }
 
-            tbody.innerHTML = data.map(item => {
+            // Agrupamos por repositor + fecha/hora de asignación exacta (created_at)
+            adminPlanillasAgrupadasGlobal = {};
+
+            data.forEach(item => {
+                let fechaClave = 'Asignación Sin Fecha';
+                if (item.created_at) {
+                    const d = new Date(item.created_at);
+                    fechaClave = d.toLocaleString('es-AR', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' });
+                }
+
+                const repoNombre = item.nombre_repositor || 'Repositor General';
+                const claveAgrupacion = `${repoNombre}___${fechaClave}`;
+
+                if (!adminPlanillasAgrupadasGlobal[claveAgrupacion]) {
+                    adminPlanillasAgrupadasGlobal[claveAgrupacion] = {
+                        repositor: repoNombre,
+                        fechaAsignacion: fechaClave,
+                        rawCreatedAt: item.created_at, // Guardamos la marca de tiempo de la base de datos
+                        productos: []
+                    };
+                }
+                adminPlanillasAgrupadasGlobal[claveAgrupacion].productos.push(item);
+            });
+
+            const llavesPlanillas = Object.keys(adminPlanillasAgrupadasGlobal);
+
+            contenedorCarpetas.innerHTML = llavesPlanillas.map((clave, index) => {
+                const grupo = adminPlanillasAgrupadasGlobal[clave];
+                const totalProds = grupo.productos.length;
+                const revisados = grupo.productos.filter(p => p.estado === 'REVISADO').length;
+                const porcentaje = Math.round((revisados / totalProds) * 100);
+                const completado = revisados === totalProds;
+                const claveEscapada = clave.replace(/'/g, "\\'");
+
+                return `
+                    <div class="bg-white border-2 ${completado ? 'border-emerald-500' : 'border-slate-200'} rounded-xl p-5 mb-4 shadow-sm hover:shadow-md transition">
+                        
+                        <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2 mb-3">
+                            <div>
+                                <span class="bg-blue-100 text-blue-900 text-xs font-extrabold px-2.5 py-1 rounded-md uppercase">
+                                    👤 Repositor: ${grupo.repositor}
+                                </span>
+                                <h4 class="font-bold text-slate-800 text-sm mt-2">📋 Planilla Asignada #${llavesPlanillas.length - index} (${grupo.fechaAsignacion} hs)</h4>
+                            </div>
+                            <span class="px-3 py-1 text-xs font-bold rounded-full ${completado ? 'bg-emerald-100 text-emerald-800 border border-emerald-300' : 'bg-amber-100 text-amber-800 border border-amber-300'}">
+                                ${completado ? '✔ COMPLETADA' : `${revisados}/${totalProds} REVISADOS (${porcentaje}%)`}
+                            </span>
+                        </div>
+
+                        <!-- Barra de Progreso -->
+                        <div class="w-full bg-slate-100 h-2.5 rounded-full overflow-hidden my-3">
+                            <div class="bg-${completado ? 'emerald' : 'amber'}-500 h-full transition-all duration-300" style="width: ${porcentaje}%"></div>
+                        </div>
+
+                        <div class="flex flex-col sm:flex-row justify-between items-stretch sm:items-center text-xs text-slate-500 pt-2 border-t gap-2">
+                            <span>📦 Total ítems: <strong>${totalProds}</strong></span>
+                            
+                            <div class="flex items-center gap-2 justify-end">
+                                <!-- Botón para Borrar la Planilla Completa -->
+                                <button onclick="eliminarPlanillaCompleta('${claveEscapada}')" 
+                                    class="bg-red-50 hover:bg-red-100 text-red-600 font-bold px-3 py-1.5 rounded-lg border border-red-200 transition flex items-center gap-1">
+                                    🗑️ Borrar Planilla
+                                </button>
+                                
+                                <!-- Botón para Ver Productos -->
+                                <button onclick="adminAbrirDetallePlanilla('${claveEscapada}')" 
+                                    class="bg-blue-50 hover:bg-blue-100 text-blue-700 font-bold px-3 py-1.5 rounded-lg border border-blue-200 transition flex items-center gap-1">
+                                    📂 Ver productos →
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        // --- FUNCIÓN PARA ELIMINAR LA PLANILLA COMPLETA ---
+        async function eliminarPlanillaCompleta(claveAgrupacion) {
+            const grupo = adminPlanillasAgrupadasGlobal[claveAgrupacion];
+            if (!grupo) return;
+
+            const confirmacion = confirm(
+                `⚠️ ¿Estás seguro de que deseas ELIMINAR COMPLETAMENTE esta planilla?\n\n` +
+                `• Repositor: ${grupo.repositor}\n` +
+                `• Fecha: ${grupo.fechaAsignacion}\n` +
+                `• Total de ítems a borrar: ${grupo.productos.length} productos\n\n` +
+                `Esta acción eliminará todos los registros asociados de forma permanente.`
+            );
+
+            if (!confirmacion) return;
+
+            // Extraemos todos los IDs de los productos pertenecientes a esa planilla
+            const idsABorrar = grupo.productos.map(p => p.id);
+
+            const { error } = await supabaseClient
+                .from('planillas_vencimientos')
+                .delete()
+                .in('id', idsABorrar);
+
+            if (error) {
+                alert('Error al eliminar la planilla: ' + error.message);
+            } else {
+                alert('¡La planilla completa fue eliminada con éxito!');
+                cargarMonitoreoPlanillas();
+            }
+        }
+
+       
+        let adminEstadoFiltroActual = 'TODOS';
+
+        function adminAbrirDetallePlanilla(claveAgrupacion) {
+            adminClavePlanillaSeleccionado = claveAgrupacion;
+            adminEstadoFiltroActual = 'TODOS'; // Resetea el filtro al entrar
+            actualizarEstilosBotonesFiltro();
+
+            const grupo = adminPlanillasAgrupadasGlobal[claveAgrupacion];
+            if (!grupo) return;
+
+            document.getElementById('adminVistaListaPlanillasPadre').style.display = 'none';
+            document.getElementById('adminVistaDetallePlanillaHijo').style.display = 'block';
+
+            document.getElementById('adminTituloPlanillaSeleccionada').textContent = `Repositor: ${grupo.repositor} | Fecha: ${grupo.fechaAsignacion}`;
+            document.getElementById('adminLblDetalleTitulo').textContent = `Productos de la Planilla (${grupo.productos.length})`;
+
+            renderizarTablaMonitoreoDetalle();
+        }
+
+        function filtrarAdminDetalleEstado(estado) {
+            adminEstadoFiltroActual = estado;
+            actualizarEstilosBotonesFiltro();
+            renderizarTablaMonitoreoDetalle();
+        }
+
+        function actualizarEstilosBotonesFiltro() {
+            const btnTodos = document.getElementById('btnFiltrarTodos');
+            const btnPendiente = document.getElementById('btnFiltrarPendiente');
+            const btnRevisado = document.getElementById('btnFiltrarRevisado');
+
+            // Reset general
+            [btnTodos, btnPendiente, btnRevisado].forEach(b => {
+                b.className = "px-3 py-1 rounded-md text-slate-600 hover:bg-slate-200 transition";
+            });
+
+            // Activo según corresponda
+            if (adminEstadoFiltroActual === 'TODOS') {
+                btnTodos.className = "px-3 py-1 rounded-md bg-slate-900 text-white transition shadow-sm";
+            } else if (adminEstadoFiltroActual === 'PENDIENTE') {
+                btnPendiente.className = "px-3 py-1 rounded-md bg-amber-500 text-white transition shadow-sm";
+            } else if (adminEstadoFiltroActual === 'REVISADO') {
+                btnRevisado.className = "px-3 py-1 rounded-md bg-emerald-600 text-white transition shadow-sm";
+            }
+        }
+
+        function renderizarTablaMonitoreoDetalle() {
+            const grupo = adminPlanillasAgrupadasGlobal[adminClavePlanillaSeleccionado];
+            if (!grupo) return;
+
+            const tbody = document.getElementById('adminTablaMonitoreoDetalle');
+
+            // Aplicamos el filtro seleccionado
+            const productosFiltrados = grupo.productos.filter(item => {
+                if (adminEstadoFiltroActual === 'TODOS') return true;
+                return item.estado === adminEstadoFiltroActual;
+            });
+
+            if (productosFiltrados.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="5" class="p-6 text-center text-slate-400">No hay productos que coincidan con el filtro "${adminEstadoFiltroActual}".</td></tr>`;
+                return;
+            }
+
+            tbody.innerHTML = productosFiltrados.map(item => {
                 const esRevisado = item.estado === 'REVISADO';
                 const fechaVto = item.fecha_vencimiento ? item.fecha_vencimiento.split('-').reverse().join('/') : '-';
 
                 return `
                     <tr class="border-b hover:bg-slate-50">
-                        <td class="p-3 font-bold text-slate-800 text-xs">${item.nombre_repositor || 'Repositor'}</td>
                         <td class="p-3">
                             <div class="font-bold text-slate-900 text-xs">${item.descripcion}</div>
                             <div class="font-mono text-[11px] text-slate-400">EAN: ${item.codigo_ean} | Sec: ${item.sector || '-'}</div>
@@ -609,7 +856,7 @@
                                     <strong>Cant. Real:</strong> ${item.cantidad_real !== null ? item.cantidad_real + ' u.' : 'No especificada'}<br>
                                     <strong>Nota:</strong> ${item.observacion_repositor || 'Sin observaciones'}
                                 </div>
-                            ` : `<span class="text-slate-400 italic">Pendiente de revisión por el repositor...</span>`}
+                            ` : `<span class="text-slate-400 italic">Pendiente de revisión...</span>`}
                         </td>
                         <td class="p-3 text-center">
                             <button onclick="eliminarItemPlanilla('${item.id}', '${item.descripcion.replace(/'/g, "\\'")}')" 
@@ -622,7 +869,14 @@
             }).join('');
         }
 
-        // --- FUNCIÓN PARA BORRAR UN ÍTEM DE LA PLANILLA ---
+        function adminVolverAListaPlanillas() {
+            document.getElementById('adminVistaListaPlanillasPadre').style.display = 'block';
+            document.getElementById('adminVistaDetallePlanillaHijo').style.display = 'none';
+            adminClavePlanillaSeleccionado = null;
+            cargarMonitoreoPlanillas();
+        }
+
+        // Actualizamos también la función de eliminar ítem para que si borra dentro del detalle, refresque esa misma planilla
         async function eliminarItemPlanilla(id, descripcion) {
             if (confirm(`¿Estás seguro de eliminar el producto "${descripcion}" de la planilla?`)) {
                 const { error } = await supabaseClient
@@ -633,10 +887,17 @@
                 if (error) {
                     alert('Error al eliminar el registro: ' + error.message);
                 } else {
-                    cargarMonitoreoPlanillas(); 
+                    await cargarMonitoreoPlanillas();
+                    if (adminClavePlanillaSeleccionado && adminPlanillasAgrupadasGlobal[adminClavePlanillaSeleccionado]) {
+                        adminAbrirDetallePlanilla(adminClavePlanillaSeleccionado);
+                    } else {
+                        adminVolverAListaPlanillas();
+                    }
                 }
             }
         }
+
+        
 
         // --- REPOSITORES ---
         async function cargarRepositores() {
@@ -1060,7 +1321,7 @@
             }
         }
 
-        async function cargarLotesAdmin() {
+       async function cargarLotesAdmin() {
             const { data, error } = await supabaseClient
                 .from('vencimientos')
                 .select('*')
@@ -1077,8 +1338,8 @@
 
             generarChipsFiltros(todosLosLotesAdmin);
             renderizarTablaLotesFiltrados();
+            actualizarContadorAlertasBadge(); // <-- ¡Asegurate de que esté aquí!
         }
-
         function generarChipsFiltros(lotes) {
             const containerSector = document.getElementById('chipsSectorContainer');
             containerSector.innerHTML = SECTORES_FIJOS.map(sector => {
@@ -1138,17 +1399,32 @@
             renderizarTablaLotesFiltrados();
         }
 
-        function renderizarTablaLotesFiltrados() {
+       function renderizarTablaLotesFiltrados() {
             const tbody = document.getElementById('tablaLotesAdmin');
             
             const lotesFiltrados = todosLosLotesAdmin.filter(lote => {
                 if (sectoresSeleccionados.size > 0) {
-                    const matchSector = sectoresSeleccionados.has(lote.sector);
+                    // Normalizamos a mayúsculas para comparar sin errores de tipeo o mayúsculas
+                    const sectorLote = (lote.sector || '').trim().toUpperCase();
+                    let matchSector = false;
+                    for (let s of sectoresSeleccionados) {
+                        if (s.trim().toUpperCase() === sectorLote) {
+                            matchSector = true;
+                            break;
+                        }
+                    }
                     if (!matchSector) return false;
                 }
 
                 if (seccionesSeleccionadas.size > 0) {
-                    const matchSeccion = seccionesSeleccionadas.has(lote.seccion);
+                    const seccionLote = (lote.seccion || '').trim().toUpperCase();
+                    let matchSeccion = false;
+                    for (let sec of seccionesSeleccionadas) {
+                        if (sec.trim().toUpperCase() === seccionLote) {
+                            matchSeccion = true;
+                            break;
+                        }
+                    }
                     if (!matchSeccion) return false;
                 }
 
@@ -1300,7 +1576,9 @@
             contenedorPrint.classList.add('hidden');
         }
 
-        async function guardarLoteAdminOficial() {
+       
+            
+           async function guardarLoteAdminOficial() {
             const ean = document.getElementById('vtoEanAdmin').value.trim();
             const fecha = document.getElementById('vtoFechaAdmin').value;
             const cantidad = parseInt(document.getElementById('vtoCantidadAdmin').value);
@@ -1346,6 +1624,77 @@
                 hour: '2-digit', minute: '2-digit' 
             });
 
+            // 1. Verificamos si ya existe un lote ACTIVO con el mismo EAN y la MISMA fecha de vencimiento en esta tienda
+            const { data: lotesExistentes, error: errorBusqueda } = await supabaseClient
+                .from('vencimientos')
+                .select('*')
+                .eq('tienda_id', tiendaId)
+                .eq('codigo_barras', ean)
+                .eq('fecha_vencimiento', fecha);
+
+            if (errorBusqueda) {
+                msg.style.color = '#dc2626';
+                msg.textContent = 'Error al verificar registros existentes: ' + errorBusqueda.message;
+                return;
+            }
+
+            if (lotesExistentes && lotesExistentes.length > 0) {
+                // Ya existe un lote con el mismo EAN y la misma fecha (Acumulación inteligente)
+                const loteAnterior = lotesExistentes[0];
+                const cantidadAnterior = loteAnterior.cantidad || loteAnterior.cantidad_unidades || 0;
+                const nuevaCantidadTotal = cantidadAnterior + cantidad;
+
+                const confirmarSuma = confirm(
+                    `⚠️ Ya existe un registro de este producto con vencimiento al ${fecha.split('-').reverse().join('/')}.\n\n` +
+                    `Cantidad actual en sistema: ${cantidadAnterior} u.\n` +
+                    `Unidades a agregar: ${cantidad} u.\n\n` +
+                    `¿Deseas SUMAR estas unidades al lote existente (Aceptar) o crear un registro aparte (Cancelar)?`
+                );
+
+                if (confirmarSuma) {
+                    let bitacora = Array.isArray(loteAnterior.bitacora_observaciones) ? loteAnterior.bitacora_observaciones : [];
+                    bitacora.push({ 
+                        fechaHora: fechaHoraStr, 
+                        autor: `Admin (${codigoSucursal})`, 
+                        nota: `Admin sumó ${cantidad} unidades (Total actualizado: ${nuevaCantidadTotal} u.)` 
+                    });
+
+                    const updateData = {
+                        cantidad: nuevaCantidadTotal,
+                        bitacora_observaciones: bitacora
+                    };
+                    if (fotoUrl) updateData.foto_url = fotoUrl;
+
+                    const { error: errorUpdate } = await supabaseClient
+                        .from('vencimientos')
+                        .update(updateData)
+                        .eq('id', loteAnterior.id);
+
+                    if (errorUpdate) {
+                        msg.style.color = '#dc2626';
+                        msg.textContent = 'Error al actualizar el stock: ' + errorUpdate.message;
+                        return;
+                    } else {
+                        msg.style.color = '#16a34a';
+                        msg.textContent = `¡Stock actualizado con éxito! Nuevo total: ${nuevaCantidadTotal} unidades.`;
+                        
+                        document.getElementById('vtoEanAdmin').value = '';
+                        document.getElementById('vtoDescAdmin').value = '';
+                        document.getElementById('vtoDescAdmin').readOnly = true;
+                        document.getElementById('vtoDescAdmin').classList.add('bg-slate-100');
+                        document.getElementById('vtoFechaAdmin').value = '';
+                        document.getElementById('vtoCantidadAdmin').value = '';
+                        document.getElementById('fotoLoteAdmin').value = '';
+                        document.getElementById('textoArchivoAdmin').textContent = 'Ningún archivo seleccionado';
+                        window.tempProductoCat = null;
+
+                        cargarLotesAdmin();
+                        return;
+                    }
+                }
+            }
+
+            // 2. Si no existe o eligió crear un registro aparte (Fecha distinta)
             const catInfo = window.tempProductoCat || {};
             const esFueraDeCatalogo = !window.tempProductoCat;
 
@@ -1540,6 +1889,117 @@
                 console.error('Error al generar archivo:', err);
                 alert('Ocurrió un error al exportar el archivo.');
             }
+        }
+        function esMenorOIgualA10Dias(fechaVtoStr) {
+    if (!fechaVtoStr) return false;
+
+    const hoy = new Date();
+    hoy.setHours(0, 0, 0, 0); // Normalizamos a medianoche
+
+    const vto = new Date(fechaVtoStr + 'T00:00:00');
+    const diferenciaTiempo = vto - hoy;
+    const diasRestantes = Math.ceil(diferenciaTiempo / (1000 * 60 * 60 * 24));
+
+    // Si faltan 10 días o menos (o si ya está vencido: < 0)
+    return diasRestantes <= 10;
+}
+
+
+           // Función corregida para calcular días restantes sin errores de zona horaria
+        function calcularDiasRestantes(fechaVtoStr) {
+            if (!fechaVtoStr) return 999;
+            
+            const hoy = new Date();
+            hoy.setHours(0, 0, 0, 0); // Medianoche local actual
+
+            // Separamos año, mes y día para evitar el desfase de UTC de JavaScript
+            const partes = fechaVtoStr.split('-');
+            if (partes.length !== 3) return 999;
+            const vto = new Date(parseInt(partes[0]), parseInt(partes[1]) - 1, parseInt(partes[2]));
+            vto.setHours(0, 0, 0, 0);
+
+            const diferenciaTiempo = vto - hoy;
+            return Math.round(diferenciaTiempo / (1000 * 60 * 60 * 24));
+        }
+
+        // Actualiza el número rojo del badge en la barra lateral
+        function actualizarContadorAlertasBadge() {
+            // Usamos la variable local correcta 'todosLosLotesAdmin'
+            const alertas = (todosLosLotesAdmin || []).filter(lote => {
+                const dias = calcularDiasRestantes(lote.fecha_vencimiento);
+                return dias <= 10;
+            });
+
+            const badge = document.getElementById('badgeAlertaVencimientos');
+            if (badge) {
+                badge.textContent = alertas.length;
+                badge.style.display = alertas.length > 0 ? 'inline-block' : 'none';
+            }
+        }
+
+        // Renderiza exclusivamente la tabla de productos con 10 días o menos
+        function renderizarTablaAlertas() {
+            const tbody = document.getElementById('tablaAlertasAdmin');
+            const contadorBadge = document.getElementById('contadorAlertasBadge');
+            
+            const alertas = (todosLosLotesAdmin || []).filter(lote => {
+                return calcularDiasRestantes(lote.fecha_vencimiento) <= 10;
+            });
+
+            if (contadorBadge) {
+                contadorBadge.textContent = `${alertas.length} productos en alerta`;
+            }
+
+            if (alertas.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="7" class="p-8 text-center text-emerald-600 font-bold bg-emerald-50">🎉 ¡Excelente! No hay productos próximos a vencer en los próximos 10 días.</td></tr>`;
+                return;
+            }
+
+            tbody.innerHTML = alertas.map(lote => {
+                const desc = lote.nombre_producto || 'Sin descripción';
+                const ean = lote.codigo_barras || lote.codigo_ean || '-';
+                const dias = calcularDiasRestantes(lote.fecha_vencimiento);
+                const notasCount = Array.isArray(lote.bitacora_observaciones) ? lote.bitacora_observaciones.length : 0;
+                
+                let textoUrgencia = `Vence en ${dias} días`;
+                let claseFila = 'bg-red-50/30 hover:bg-red-50/70 border-b';
+                
+                if (dias < 0) {
+                    textoUrgencia = `🚨 VENCIDO hace ${Math.abs(dias)} días`;
+                    claseFila = 'bg-red-100/50 hover:bg-red-100 border-b font-semibold';
+                } else if (dias === 0) {
+                    textoUrgencia = `🔥 ¡VENCE HOY!`;
+                    claseFila = 'bg-red-100/70 hover:bg-red-200 border-b font-bold';
+                }
+
+                return `
+                    <tr class="${claseFila}">
+                        <td class="p-3">
+                            <div class="font-bold text-slate-900 text-xs">${desc}</div>
+                            <div class="font-mono text-[11px] text-slate-400">Sec: ${lote.seccion || '-'} | EAN: ${ean}</div>
+                        </td>
+                        <td class="p-3 font-mono text-xs">
+                            <span class="text-red-700 font-bold block">${lote.fecha_vencimiento || '-'}</span>
+                            <span class="text-[10px] font-extrabold text-red-600 uppercase bg-red-100 px-1.5 py-0.5 rounded inline-block mt-0.5">${textoUrgencia}</span>
+                        </td>
+                        <td class="p-3 text-center font-bold text-slate-800">${lote.cantidad || lote.cantidad_unidades || 0} u.</td>
+                        <td class="p-3 text-xs text-slate-600">${lote.registrado_por || 'Repositor'}</td>
+                        <td class="p-3 text-xs text-slate-600">${lote.accion_realizada || '-'}</td>
+                        <td class="p-3 text-center">
+                            <button onclick="abrirModalBitacora('${lote.id}', '${ean}', '${desc.replace(/'/g, "\\'")}', '${encodeURIComponent(JSON.stringify(lote.bitacora_observaciones || []))}', '${lote.foto_url}')" 
+                                class="text-xs bg-blue-100 hover:bg-blue-200 text-blue-800 font-bold px-3 py-1.5 rounded-lg inline-flex items-center gap-1">
+                                📝 Notes (${notasCount})
+                            </button>
+                        </td>
+                        <td class="p-3 text-center">
+                            <button onclick="eliminarLoteAdmin('${lote.id}', '${desc.replace(/'/g, "\\'")}')" 
+                                class="text-xs bg-red-100 hover:bg-red-200 text-red-700 font-bold px-2.5 py-1.5 rounded-lg transition" title="Borrar lote">
+                                🗑️ Borrar
+                            </button>
+                        </td>
+                    </tr>
+                `;
+            }).join('');
         }
 
         function cerrarSesion() {
