@@ -53,25 +53,31 @@
                 </button>
 
                 <!-- Módulo Vencimientos con Submenú de Alertas -->
-    <div class="space-y-1">
-        <button onclick="cambiarSeccionAdmin('vencimientos', this)" class="menu-btn w-full flex items-center justify-between px-3.5 py-2.5 rounded-xl text-xs font-bold text-slate-300 hover:text-white hover:bg-slate-800 transition">
-            <span class="flex items-center gap-2.5">⏱️ Vencimientos</span>
-            <span id="badgeVtosCount" class="bg-red-600 text-white text-[10px] px-1.5 py-0.5 rounded-full">0</span>
-        </button>
-        
-        <!-- Subcategoría de Alertas -->
-        <div class="pl-4 space-y-1 border-l-2 border-red-500 ml-3 mt-1">
-            <button onclick="cambiarSeccionAdmin('alertasVencimientos', this)" class="menu-btn w-full text-left text-xs font-semibold text-red-400 hover:text-red-300 py-1.5 px-2 rounded-lg hover:bg-slate-800 transition flex items-center gap-1.5">
-                🚨 Alertas 
-            </button>
-        </div>
-    </div>
+                <div class="space-y-1">
+                    <button onclick="cambiarSeccionAdmin('vencimientos', this)" class="menu-btn w-full flex items-center justify-between px-3.5 py-2.5 rounded-xl text-xs font-bold text-slate-300 hover:text-white hover:bg-slate-800 transition">
+                        <span class="flex items-center gap-2.5">⏱️ Vencimientos</span>
+                        <span id="badgeVtosCount" class="bg-red-600 text-white text-[10px] px-1.5 py-0.5 rounded-full">0</span>
+                    </button>
+                    
+                    <!-- Subcategoría de Alertas -->
+                    <div class="pl-4 space-y-1 border-l-2 border-red-500 ml-3 mt-1">
+                        <button onclick="cambiarSeccionAdmin('alertasVencimientos', this)" class="menu-btn w-full text-left text-xs font-semibold text-red-400 hover:text-red-300 py-1.5 px-2 rounded-lg hover:bg-slate-800 transition flex items-center gap-1.5">
+                            🚨 Alertas 
+                        </button>
+                    </div>
+                </div>
+
                 <button onclick="cambiarSeccionAdmin('planilla', this)" class="menu-btn w-full flex items-center justify-between px-3.5 py-2.5 rounded-xl text-xs font-bold transition text-slate-300 hover:bg-slate-800 hover:text-white">
                     <span class="flex items-center gap-2.5">📋 Asignar Planilla de Control VTO</span>
                 </button>
 
                 <button onclick="cambiarSeccionAdmin('monitoreoPlanillas', this)" class="menu-btn w-full flex items-center justify-between px-3.5 py-2.5 rounded-xl text-xs font-bold transition text-slate-300 hover:bg-slate-800 hover:text-white">
                     <span class="flex items-center gap-2.5">👁️ Estado de Planillas</span>
+                </button>
+
+                <!-- Opción agregada en el menú lateral (debajo de Estado de Planillas) -->
+                <button onclick="abrirModalPassword()" class="menu-btn w-full flex items-center justify-between px-3.5 py-2.5 rounded-xl text-xs font-bold transition text-slate-300 hover:bg-slate-800 hover:text-white">
+                    <span class="flex items-center gap-2.5">🔑 Cambiar Credencial</span>
                 </button>
             </nav>
         </div>
@@ -218,38 +224,39 @@
             </div>
 
             <!-- SECCIÓN: ALERTAS DE VENCIMIENTO (≤ 10 DÍAS) -->
-<div id="seccionAlertasVencimientos" class="seccion-admin space-y-6 hidden">
-    <div class="bg-white rounded-xl shadow-md p-6 border border-slate-200 space-y-4">
-        <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center border-b pb-3 gap-2">
-            <div>
-                <h2 class="text-sm font-bold text-red-600 uppercase tracking-wide flex items-center gap-2">
-                    🚨 Alertas Críticas de Vencimiento
-                </h2>
-                <p class="text-xs text-slate-500 mt-0.5">Artículos próximos a expirar que requieren acción inmediata</p>
-            </div>
-            <span id="contadorAlertasBadge" class="bg-red-100 text-red-800 text-xs font-extrabold px-3 py-1.5 rounded-full border border-red-300">0 productos en alerta</span>
-        </div>
+            <div id="seccionAlertasVencimientos" class="seccion-admin space-y-6 hidden">
+                <div class="bg-white rounded-xl shadow-md p-6 border border-slate-200 space-y-4">
+                    <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center border-b pb-3 gap-2">
+                        <div>
+                            <h2 class="text-sm font-bold text-red-600 uppercase tracking-wide flex items-center gap-2">
+                                🚨 Alertas Críticas de Vencimiento
+                            </h2>
+                            <p class="text-xs text-slate-500 mt-0.5">Artículos próximos a expirar que requieren acción inmediata</p>
+                        </div>
+                        <span id="contadorAlertasBadge" class="bg-red-100 text-red-800 text-xs font-extrabold px-3 py-1.5 rounded-full border border-red-300">0 productos en alerta</span>
+                    </div>
 
-        <div class="overflow-x-auto max-h-[550px] overflow-y-auto border border-slate-200 rounded-lg">
-            <table class="w-full text-left border-collapse text-sm">
-                <thead class="bg-slate-100 text-slate-700 uppercase text-xs tracking-wider sticky top-0">
-                    <tr>
-                        <th class="p-3">EAN / Producto</th>
-                        <th class="p-3">Vencimiento / Urgencia</th>
-                        <th class="p-3 text-center">Cant.</th>
-                        <th class="p-3">Cargado Por</th>
-                        <th class="p-3">Acción</th>
-                        <th class="p-3 text-center">Notes</th>
-                        <th class="p-3 text-center">Acciones</th>
-                    </tr>
-                </thead>
-                <tbody id="tablaAlertasAdmin">
-                    <tr><td colspan="7" class="p-6 text-center text-slate-400">Cargando alertas...</td></tr>
-                </tbody>
-            </table>
-        </div>
-    </div>
-</div>
+                    <div class="overflow-x-auto max-h-[550px] overflow-y-auto border border-slate-200 rounded-lg">
+                        <table class="w-full text-left border-collapse text-sm">
+                            <thead class="bg-slate-100 text-slate-700 uppercase text-xs tracking-wider sticky top-0">
+                                <tr>
+                                    <th class="p-3">EAN / Producto</th>
+                                    <th class="p-3">Vencimiento / Urgencia</th>
+                                    <th class="p-3 text-center">Cant.</th>
+                                    <th class="p-3">Cargado Por</th>
+                                    <th class="p-3">Acción</th>
+                                    <th class="p-3 text-center">Notes</th>
+                                    <th class="p-3 text-center">Acciones</th>
+                                </tr>
+                            </thead>
+                            <tbody id="tablaAlertasAdmin">
+                                <tr><td colspan="7" class="p-6 text-center text-slate-400">Cargando alertas...</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
             <!-- SECCIÓN 3: VENCIMIENTOS Y BITÁCORA -->
             <div id="seccionVencimientos" class="seccion-admin space-y-6 hidden">
                 <div class="bg-white rounded-xl shadow-md p-6 border border-slate-200 space-y-4">
@@ -406,7 +413,7 @@
                 </div>
             </div>
 
-        <!-- SECCIÓN 5: MONITOREO EN TIEMPO REAL DE PLANILLAS (VISTA POR CARPETAS) -->
+            <!-- SECCIÓN 5: MONITOREO EN TIEMPO REAL DE PLANILLAS (VISTA POR CARPETAS) -->
             <div id="seccionMonitoreoPlanillas" class="seccion-admin space-y-6 hidden">
                 <div class="bg-white rounded-xl shadow-md p-6 border border-slate-200 space-y-6">
                     
@@ -540,6 +547,35 @@
         </div>
     </div>
 
+    <!-- MODAL DE CAMBIO DE CONTRASEÑA DE LA SUCURSAL -->
+    <div id="modalPassword" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.5); z-index:9999; justify-content:center; align-items:center;">
+        <div style="background:#fff; padding:25px; border-radius:8px; width:320px; box-shadow: 0px 4px 12px rgba(0,0,0,0.2);">
+            <h3 style="margin-top:0; margin-bottom:15px; font-size:1.2rem; color:#333;">Cambiar Contraseña Sucursal</h3>
+            
+            <form id="formCambioPassword" onsubmit="ejecutarCambioPassword(event)">
+                <div style="margin-bottom: 12px;">
+                    <label style="display:block; font-size:0.9rem; margin-bottom:4px; color:#555;">Contraseña Actual:</label>
+                    <input type="password" id="inputPassActual" required style="width:100%; padding:8px; box-sizing:border-box; border:1px solid #ccc; border-radius:4px;">
+                </div>
+                
+                <div style="margin-bottom: 12px;">
+                    <label style="display:block; font-size:0.9rem; margin-bottom:4px; color:#555;">Nueva Contraseña:</label>
+                    <input type="password" id="inputPassNueva" required style="width:100%; padding:8px; box-sizing:border-box; border:1px solid #ccc; border-radius:4px;">
+                </div>
+                
+                <div style="margin-bottom: 20px;">
+                    <label style="display:block; font-size:0.9rem; margin-bottom:4px; color:#555;">Repetir Nueva:</label>
+                    <input type="password" id="inputPassNuevaRepetida" required style="width:100%; padding:8px; box-sizing:border-box; border:1px solid #ccc; border-radius:4px;">
+                </div>
+                
+                <div style="display:flex; justify-content:flex-end; gap:8px;">
+                    <button type="button" onclick="cerrarModalPassword()" style="padding:8px 12px; background:#ccc; border:none; border-radius:4px; cursor:pointer;">Cancelar</button>
+                    <button type="submit" style="padding:8px 12px; background:#007bff; color:#fff; border:none; border-radius:4px; cursor:pointer;">Guardar</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
     <!-- MODAL ESCÁNER CÁMARA -->
     <div id="scannerModalAdmin" style="display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.85); z-index: 100; flex-direction: column; align-items: center; justify-content: center; padding: 20px;">
         <div id="readerAdmin" style="width: 100%; max-width: 360px; background: #fff; border-radius: 8px; overflow: hidden;"></div>
@@ -585,7 +621,6 @@
         }
 
         // --- NAVEGACIÓN POR SIDEBAR ---
-       // --- NAVEGACIÓN POR SIDEBAR ---
         function cambiarSeccionAdmin(seccionId, btnElement) {
             document.querySelectorAll('.seccion-admin').forEach(el => el.classList.add('hidden'));
             document.querySelectorAll('.menu-btn').forEach(el => {
@@ -603,7 +638,6 @@
                 document.getElementById('seccionVencimientos').classList.remove('hidden');
                 document.getElementById('nombreSeccionActual').textContent = 'Registro de Vencimientos y Bitácora';
             } else if (seccionId === 'alertasVencimientos') {
-                // Muestra la sección de Alertas de 10 días o menos
                 document.getElementById('seccionAlertasVencimientos').classList.remove('hidden');
                 document.getElementById('nombreSeccionActual').textContent = '🚨 Stock Crítico con Vencimiento Próximo';
                 renderizarTablaAlertas();
@@ -620,6 +654,64 @@
             if (btnElement) {
                 btnElement.classList.remove('text-slate-300', 'hover:bg-slate-800', 'hover:text-white');
                 btnElement.classList.add('bg-blue-700', 'text-white', 'shadow-md');
+            }
+        }
+
+        async function cambiarPasswordAdmin(codigoSucursal, passwordActual, passwordNueva) {
+            try {
+                const { data: tienda, error: errorBusq } = await supabaseClient
+                    .from('tiendas')
+                    .select('id')
+                    .eq('codigo_sucursal', codigoSucursal)
+                    .eq('password', passwordActual)
+                    .single();
+
+                if (errorBusq || !tienda) {
+                    alert("La contraseña actual de la sucursal es incorrecta.");
+                    return false;
+                }
+
+                const { error: errorAct } = await supabaseClient
+                    .from('tiendas')
+                    .update({ password: passwordNueva })
+                    .eq('codigo_sucursal', codigoSucursal);
+
+                if (errorAct) throw errorAct;
+
+                alert("¡Contraseña de la sucursal actualizada con éxito!");
+                return true;
+            } catch (err) {
+                console.error("Error al actualizar contraseña de tienda:", err);
+                alert("Hubo un error al actualizar la contraseña.");
+                return false;
+            }
+        }
+
+        function abrirModalPassword() {
+            document.getElementById('modalPassword').style.display = 'flex';
+        }
+
+        function cerrarModalPassword() {
+            document.getElementById('modalPassword').style.display = 'none';
+            document.getElementById('formCambioPassword').reset();
+        }
+
+        async function ejecutarCambioPassword(event) {
+            event.preventDefault();
+            const actual = document.getElementById('inputPassActual').value;
+            const nueva = document.getElementById('inputPassNueva').value;
+            const repetida = document.getElementById('inputPassNuevaRepetida').value;
+
+            if (nueva !== repetida) {
+                alert("Las contraseñas nuevas no coinciden.");
+                return;
+            }
+
+            const codSuc = codigoSucursal || localStorage.getItem('codigo_sucursal') || '429'; 
+
+            const exito = await cambiarPasswordAdmin(codSuc, actual, nueva);
+            if (exito) {
+                cerrarModalPassword();
             }
         }
 
@@ -645,8 +737,7 @@
         let adminPlanillasAgrupadasGlobal = {};
         let adminClavePlanillaSeleccionada = null;
 
-        
-           async function cargarMonitoreoPlanillas() {
+        async function cargarMonitoreoPlanillas() {
             const contenedorCarpetas = document.getElementById('adminContenedorCarpetasPlanillas');
             contenedorCarpetas.innerHTML = `<div class="text-center text-slate-400 py-6">Actualizando datos en vivo...</div>`;
 
@@ -661,7 +752,6 @@
                 return;
             }
 
-            // Agrupamos por repositor + fecha/hora de asignación exacta (created_at)
             adminPlanillasAgrupadasGlobal = {};
 
             data.forEach(item => {
@@ -678,7 +768,7 @@
                     adminPlanillasAgrupadasGlobal[claveAgrupacion] = {
                         repositor: repoNombre,
                         fechaAsignacion: fechaClave,
-                        rawCreatedAt: item.created_at, // Guardamos la marca de tiempo de la base de datos
+                        rawCreatedAt: item.created_at,
                         productos: []
                     };
                 }
@@ -719,13 +809,11 @@
                             <span>📦 Total ítems: <strong>${totalProds}</strong></span>
                             
                             <div class="flex items-center gap-2 justify-end">
-                                <!-- Botón para Borrar la Planilla Completa -->
                                 <button onclick="eliminarPlanillaCompleta('${claveEscapada}')" 
                                     class="bg-red-50 hover:bg-red-100 text-red-600 font-bold px-3 py-1.5 rounded-lg border border-red-200 transition flex items-center gap-1">
                                     🗑️ Borrar Planilla
                                 </button>
                                 
-                                <!-- Botón para Ver Productos -->
                                 <button onclick="adminAbrirDetallePlanilla('${claveEscapada}')" 
                                     class="bg-blue-50 hover:bg-blue-100 text-blue-700 font-bold px-3 py-1.5 rounded-lg border border-blue-200 transition flex items-center gap-1">
                                     📂 Ver productos →
@@ -737,7 +825,6 @@
             }).join('');
         }
 
-        // --- FUNCIÓN PARA ELIMINAR LA PLANILLA COMPLETA ---
         async function eliminarPlanillaCompleta(claveAgrupacion) {
             const grupo = adminPlanillasAgrupadasGlobal[claveAgrupacion];
             if (!grupo) return;
@@ -752,7 +839,6 @@
 
             if (!confirmacion) return;
 
-            // Extraemos todos los IDs de los productos pertenecientes a esa planilla
             const idsABorrar = grupo.productos.map(p => p.id);
 
             const { error } = await supabaseClient
@@ -767,13 +853,12 @@
                 cargarMonitoreoPlanillas();
             }
         }
-
        
         let adminEstadoFiltroActual = 'TODOS';
 
         function adminAbrirDetallePlanilla(claveAgrupacion) {
             adminClavePlanillaSeleccionado = claveAgrupacion;
-            adminEstadoFiltroActual = 'TODOS'; // Resetea el filtro al entrar
+            adminEstadoFiltroActual = 'TODOS'; 
             actualizarEstilosBotonesFiltro();
 
             const grupo = adminPlanillasAgrupadasGlobal[claveAgrupacion];
@@ -799,12 +884,10 @@
             const btnPendiente = document.getElementById('btnFiltrarPendiente');
             const btnRevisado = document.getElementById('btnFiltrarRevisado');
 
-            // Reset general
             [btnTodos, btnPendiente, btnRevisado].forEach(b => {
                 b.className = "px-3 py-1 rounded-md text-slate-600 hover:bg-slate-200 transition";
             });
 
-            // Activo según corresponda
             if (adminEstadoFiltroActual === 'TODOS') {
                 btnTodos.className = "px-3 py-1 rounded-md bg-slate-900 text-white transition shadow-sm";
             } else if (adminEstadoFiltroActual === 'PENDIENTE') {
@@ -820,7 +903,6 @@
 
             const tbody = document.getElementById('adminTablaMonitoreoDetalle');
 
-            // Aplicamos el filtro seleccionado
             const productosFiltrados = grupo.productos.filter(item => {
                 if (adminEstadoFiltroActual === 'TODOS') return true;
                 return item.estado === adminEstadoFiltroActual;
@@ -876,7 +958,6 @@
             cargarMonitoreoPlanillas();
         }
 
-        // Actualizamos también la función de eliminar ítem para que si borra dentro del detalle, refresque esa misma planilla
         async function eliminarItemPlanilla(id, descripcion) {
             if (confirm(`¿Estás seguro de eliminar el producto "${descripcion}" de la planilla?`)) {
                 const { error } = await supabaseClient
@@ -896,8 +977,6 @@
                 }
             }
         }
-
-        
 
         // --- REPOSITORES ---
         async function cargarRepositores() {
@@ -1283,45 +1362,66 @@
         }
 
         // --- VENCIMIENTOS Y AUTOCOMPLETADO EAN ---
-        async function buscarDescripcionEan() {
-            const eanInput = document.getElementById('vtoEanAdmin');
-            const descInput = document.getElementById('vtoDescAdmin');
-            
-            if (!eanInput || !descInput) return;
-            const ean = eanInput.value.trim();
-            
-            if (!ean) {
-                descInput.value = '';
-                descInput.readOnly = true;
-                descInput.classList.add('bg-slate-100');
-                return;
-            }
+        
+            // --- VENCIMIENTOS Y AUTOCOMPLETADO EAN INTELIGENTE (ADMIN) ---
+async function buscarDescripcionEan() {
+    const eanInput = document.getElementById('vtoEanAdmin');
+    const descInput = document.getElementById('vtoDescAdmin');
+    
+    if (!eanInput || !descInput) return;
+    const ean = eanInput.value.trim();
+    
+    if (!ean) {
+        descInput.value = '';
+        descInput.readOnly = true;
+        descInput.classList.add('bg-slate-100');
+        return;
+    }
 
-            descInput.value = 'Buscando en catálogo...';
+    descInput.value = 'Buscando en catálogo...';
 
-            const { data, error } = await supabaseClient
-                .from('productos')
-                .select('*')
-                .eq('codigo_ean', ean)
-                .maybeSingle();
+    // PASO 1: Buscar coincidencia exacta
+    let { data, error } = await supabaseClient
+        .from('productos')
+        .select('*')
+        .eq('codigo_ean', ean)
+        .maybeSingle();
 
-            if (data && data.descripcion) {
-                descInput.value = data.descripcion;
-                descInput.readOnly = true;
-                descInput.classList.add('bg-slate-100');
-                descInput.classList.remove('bg-white', 'border-amber-400');
-                window.tempProductoCat = data; 
-            } else {
-                descInput.value = '';
-                descInput.readOnly = false;
-                descInput.placeholder = '⚠️ EAN fuera de catálogo. Escriba la descripción aquí...';
-                descInput.classList.remove('bg-slate-100');
-                descInput.classList.add('bg-white', 'border-2', 'border-amber-400');
-                window.tempProductoCat = null; 
-            }
+    // PASO 2: Si no encuentra exacto y arranca con 23, 25, 26 o 29, buscar por primeros 7 dígitos
+    const prefijosBalanza = ['23', '25', '26', '29'];
+    const esPosibleBalanza = prefijosBalanza.some(p => ean.startsWith(p));
+
+    if (!data && esPosibleBalanza && ean.length >= 7) {
+        const eanBase7 = ean.substring(0, 7);
+        const { data: prodsBalanza } = await supabaseClient
+            .from('productos')
+            .select('*')
+            .ilike('codigo_ean', `${eanBase7}%`)
+            .limit(1);
+
+        if (prodsBalanza && prodsBalanza.length > 0) {
+            data = prodsBalanza[0];
         }
+    }
 
-       async function cargarLotesAdmin() {
+    // Evaluación final del resultado
+    if (data && data.descripcion) {
+        descInput.value = data.descripcion;
+        descInput.readOnly = true;
+        descInput.classList.add('bg-slate-100');
+        descInput.classList.remove('bg-white', 'border-amber-400');
+        window.tempProductoCat = data; 
+    } else {
+        descInput.value = '';
+        descInput.readOnly = false;
+        descInput.placeholder = '⚠️ EAN fuera de catálogo. Escriba la descripción aquí...';
+        descInput.classList.remove('bg-slate-100');
+        descInput.classList.add('bg-white', 'border-2', 'border-amber-400');
+        window.tempProductoCat = null; 
+    }
+}
+
+        async function cargarLotesAdmin() {
             const { data, error } = await supabaseClient
                 .from('vencimientos')
                 .select('*')
@@ -1338,8 +1438,9 @@
 
             generarChipsFiltros(todosLosLotesAdmin);
             renderizarTablaLotesFiltrados();
-            actualizarContadorAlertasBadge(); // <-- ¡Asegurate de que esté aquí!
+            actualizarContadorAlertasBadge();
         }
+
         function generarChipsFiltros(lotes) {
             const containerSector = document.getElementById('chipsSectorContainer');
             containerSector.innerHTML = SECTORES_FIJOS.map(sector => {
@@ -1399,12 +1500,11 @@
             renderizarTablaLotesFiltrados();
         }
 
-       function renderizarTablaLotesFiltrados() {
+        function renderizarTablaLotesFiltrados() {
             const tbody = document.getElementById('tablaLotesAdmin');
             
             const lotesFiltrados = todosLosLotesAdmin.filter(lote => {
                 if (sectoresSeleccionados.size > 0) {
-                    // Normalizamos a mayúsculas para comparar sin errores de tipeo o mayúsculas
                     const sectorLote = (lote.sector || '').trim().toUpperCase();
                     let matchSector = false;
                     for (let s of sectoresSeleccionados) {
@@ -1575,10 +1675,8 @@
 
             contenedorPrint.classList.add('hidden');
         }
-
-       
             
-           async function guardarLoteAdminOficial() {
+        async function guardarLoteAdminOficial() {
             const ean = document.getElementById('vtoEanAdmin').value.trim();
             const fecha = document.getElementById('vtoFechaAdmin').value;
             const cantidad = parseInt(document.getElementById('vtoCantidadAdmin').value);
@@ -1624,7 +1722,6 @@
                 hour: '2-digit', minute: '2-digit' 
             });
 
-            // 1. Verificamos si ya existe un lote ACTIVO con el mismo EAN y la MISMA fecha de vencimiento en esta tienda
             const { data: lotesExistentes, error: errorBusqueda } = await supabaseClient
                 .from('vencimientos')
                 .select('*')
@@ -1639,7 +1736,6 @@
             }
 
             if (lotesExistentes && lotesExistentes.length > 0) {
-                // Ya existe un lote con el mismo EAN y la misma fecha (Acumulación inteligente)
                 const loteAnterior = lotesExistentes[0];
                 const cantidadAnterior = loteAnterior.cantidad || loteAnterior.cantidad_unidades || 0;
                 const nuevaCantidadTotal = cantidadAnterior + cantidad;
@@ -1694,7 +1790,6 @@
                 }
             }
 
-            // 2. Si no existe o eligió crear un registro aparte (Fecha distinta)
             const catInfo = window.tempProductoCat || {};
             const esFueraDeCatalogo = !window.tempProductoCat;
 
@@ -1890,29 +1985,26 @@
                 alert('Ocurrió un error al exportar el archivo.');
             }
         }
+
         function esMenorOIgualA10Dias(fechaVtoStr) {
-    if (!fechaVtoStr) return false;
+            if (!fechaVtoStr) return false;
 
-    const hoy = new Date();
-    hoy.setHours(0, 0, 0, 0); // Normalizamos a medianoche
+            const hoy = new Date();
+            hoy.setHours(0, 0, 0, 0);
 
-    const vto = new Date(fechaVtoStr + 'T00:00:00');
-    const diferenciaTiempo = vto - hoy;
-    const diasRestantes = Math.ceil(diferenciaTiempo / (1000 * 60 * 60 * 24));
+            const vto = new Date(fechaVtoStr + 'T00:00:00');
+            const diferenciaTiempo = vto - hoy;
+            const diasRestantes = Math.ceil(diferenciaTiempo / (1000 * 60 * 60 * 24));
 
-    // Si faltan 10 días o menos (o si ya está vencido: < 0)
-    return diasRestantes <= 10;
-}
+            return diasRestantes <= 10;
+        }
 
-
-           // Función corregida para calcular días restantes sin errores de zona horaria
         function calcularDiasRestantes(fechaVtoStr) {
             if (!fechaVtoStr) return 999;
             
             const hoy = new Date();
-            hoy.setHours(0, 0, 0, 0); // Medianoche local actual
+            hoy.setHours(0, 0, 0, 0);
 
-            // Separamos año, mes y día para evitar el desfase de UTC de JavaScript
             const partes = fechaVtoStr.split('-');
             if (partes.length !== 3) return 999;
             const vto = new Date(parseInt(partes[0]), parseInt(partes[1]) - 1, parseInt(partes[2]));
@@ -1922,9 +2014,7 @@
             return Math.round(diferenciaTiempo / (1000 * 60 * 60 * 24));
         }
 
-        // Actualiza el número rojo del badge en la barra lateral
         function actualizarContadorAlertasBadge() {
-            // Usamos la variable local correcta 'todosLosLotesAdmin'
             const alertas = (todosLosLotesAdmin || []).filter(lote => {
                 const dias = calcularDiasRestantes(lote.fecha_vencimiento);
                 return dias <= 10;
@@ -1937,7 +2027,6 @@
             }
         }
 
-        // Renderiza exclusivamente la tabla de productos con 10 días o menos
         function renderizarTablaAlertas() {
             const tbody = document.getElementById('tablaAlertasAdmin');
             const contadorBadge = document.getElementById('contadorAlertasBadge');
